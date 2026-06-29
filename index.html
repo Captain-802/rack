@@ -1113,6 +1113,7 @@
 
     function render(result) {
       lastResult = result;
+      $("errorBox").textContent = "";
       $("errorBox").style.display = "none";
       $("mSway").textContent = fmt(result.summary.maxSway) + " mm";
       $("mTip").textContent = fmt(result.summary.maxTip) + " mm";
