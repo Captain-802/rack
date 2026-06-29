@@ -2,6 +2,11 @@
 
 RackFrame2D is a browser-based 2D elastic frame solver for steel rack frames with welded cantilever arms and configurable support conditions.
 
+## Live app
+
+- GitHub Pages: https://captain-802.github.io/rack/
+- Google Sites RACK page: https://sites.google.com/view/ahmadfayaz/rack
+
 ## Features
 
 - 2D direct-stiffness frame analysis with 3 DOF per node.
