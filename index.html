@@ -1,1506 +1,1537 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Structural Engineering Calculator (Native)</title>
-    
-    <!-- Only Tailwind CSS is required. NO React. NO Babel. -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <style>
-        html, body { min-height: 100%; margin: 0; padding: 0; background-color: #f3f4f6; }
-        body { font-family: 'Inter', sans-serif; overflow: hidden; }
-        
-        /* Custom scrollbar for a professional software look */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .hide-spinners::-webkit-inner-spin-button, .hide-spinners::-webkit-outer-spin-button {
-            -webkit-appearance: none; margin: 0;
-        }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RackFrame2D</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --line: #cfd6df;
+      --muted: #5f6d7a;
+      --text: #1e2933;
+      --blue: #1f6feb;
+      --red: #b4233c;
+      --teal: #047a72;
+      --amber: #b76514;
+      --ink: #111827;
+      --header: #182635;
+    }
 
-        .hidden { display: none !important; }
-        
-        /* Input Field Styling */
-        .input-row {
-            display: flex; flex-direction: row; justify-content: space-between; align-items: center;
-            padding: 0.25rem; border-bottom: 1px solid #f3f4f6; transition: background-color 0.2s;
-        }
-        .input-row:last-child { border-bottom: none; }
-        .input-row:hover { background-color: #f9fafb; }
-        .input-label {
-            font-size: 0.75rem; font-weight: 500; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; padding-right: 0.5rem; cursor: help;
-        }
-        .input-box {
-            width: 5rem; padding: 0.125rem 0.375rem; font-size: 0.75rem; font-family: monospace; text-align: right;
-            background-color: white; border: 1px solid #cbd5e1; border-radius: 0.25rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            outline: none; transition: box-shadow 0.2s;
-        }
-        .input-box:focus { border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6; }
-        
-        /* Radio Groups */
-        .radio-btn-label {
-            display: flex; items-center; space-x: 0.375rem; cursor: pointer; padding: 0.125rem 0.5rem; border-radius: 9999px; border: 1px solid #e2e8f0; background-color: white; transition: background-color 0.2s;
-        }
-        .radio-btn-label:hover { background-color: #f9fafb; }
-        .radio-btn-label.active-blue { background-color: #eff6ff; border-color: #bfdbfe; }
-        .radio-btn-label.active-red { background-color: #fef2f2; border-color: #fecaca; }
-    </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- codex-professional-embed-layout-v1 -->
-<style>
-  html, body { margin: 0 !important; min-height: 100%; background: #f3f4f6; overflow: auto !important; }
-  body { color: #1f2937; }
-  .flex.h-screen.bg-gray-200.overflow-hidden.font-sans { min-height: 100vh !important; height: auto !important; overflow: visible !important; }
-  .w-80.flex-shrink-0 { width: clamp(280px, 28vw, 340px) !important; }
-  .flex-1.flex.flex-col.p-6.overflow-y-auto { padding: 18px !important; }
-  .w-full.flex.flex-col.max-w-6xl.mx-auto { max-width: 1180px !important; }
-  .w-full.min-h-[350px] { min-height: 420px !important; }
-  input, select, button { max-width: 100%; }
-  @media (max-width: 900px) {
-    .flex.h-screen.bg-gray-200.overflow-hidden.font-sans { display: block !important; }
-    .w-80.flex-shrink-0 { width: 100% !important; max-height: none !important; border-right: 0 !important; border-bottom: 1px solid #cbd5e1; }
-    .flex-1.overflow-y-auto, .flex-1.flex.flex-col.p-6.overflow-y-auto { overflow: visible !important; padding: 10px !important; }
-    .input-label { white-space: normal !important; }
-    .input-row { align-items: flex-start !important; gap: 8px; }
-    .w-full.min-h-[350px] { min-height: 360px !important; }
-  }
-</style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: #edf1f5;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    header {
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 18px;
+      color: #ffffff;
+      background: var(--header);
+      border-bottom: 1px solid #0f1822;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.18);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 760;
+    }
+
+    .tag {
+      color: #d5dee9;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      min-height: calc(100vh - 58px);
+    }
+
+    aside {
+      padding: 14px;
+      border-right: 1px solid var(--line);
+      background: #f7f9fb;
+      overflow: auto;
+    }
+
+    .workspace {
+      padding: 14px;
+      overflow: auto;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    section > h2 {
+      margin: 0;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 760;
+      border-bottom: 1px solid var(--line);
+      color: #23313f;
+    }
+
+    .body {
+      padding: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      margin-bottom: 10px;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 680;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid #b9c3cf;
+      border-radius: 6px;
+      padding: 8px 9px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid rgba(31, 111, 235, 0.22);
+      border-color: var(--blue);
+    }
+
+    textarea {
+      min-height: 78px;
+      resize: vertical;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .sectionMeta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 8px 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .sectionMeta div {
+      border: 1px solid #e1e7ef;
+      border-radius: 6px;
+      padding: 7px 8px;
+      background: #f8fafc;
+      overflow-wrap: anywhere;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    button {
+      border: 1px solid #9fb0c2;
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--text);
+      padding: 8px 10px;
+      cursor: pointer;
+      font-weight: 720;
+      min-height: 34px;
+    }
+
+    button.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    button:hover { filter: brightness(0.97); }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(130px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .metric {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 70px;
+      border-top: 3px solid #9fb0c2;
+    }
+
+    .metric:nth-child(1) { border-top-color: var(--blue); }
+    .metric:nth-child(2) { border-top-color: var(--teal); }
+    .metric:nth-child(3) { border-top-color: var(--amber); }
+    .metric:nth-child(4) { border-top-color: var(--red); }
+    .metric:nth-child(5) { border-top-color: #425466; }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 720;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 17px;
+      color: var(--ink);
+      overflow-wrap: anywhere;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+      padding: 8px;
+      border-radius: 8px 8px 0 0;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      min-height: 30px;
+      padding: 6px 10px;
+      background: transparent;
+      border-color: transparent;
+      color: #425466;
+    }
+
+    .tab.active {
+      background: #ffffff;
+      border-color: #b9c3cf;
+      color: var(--ink);
+    }
+
+    .tabPanel { display: none; padding: 12px; }
+    .tabPanel.active { display: block; }
+
+    .svgWrap {
+      height: 540px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .tableWrap {
+      max-height: 340px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #e5eaf0;
+      padding: 7px 8px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #f8fafc;
+      z-index: 1;
+      color: #334155;
+      font-weight: 760;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+
+    .note {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .warn {
+      color: #8a4b05;
+      background: #fff7e6;
+      border: 1px solid #f0c36d;
+      border-radius: 6px;
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+
+    .error {
+      color: #9f1239;
+      background: #fff1f2;
+      border: 1px solid #fecdd3;
+      border-radius: 6px;
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+      display: none;
+    }
+
+    .miniLabel {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .diagramTop {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 10px;
+    }
+
+    a { color: var(--blue); }
+
+    @media (max-width: 1040px) {
+      main { grid-template-columns: 1fr; }
+      aside { border-right: 0; border-bottom: 1px solid var(--line); }
+      .summary { grid-template-columns: repeat(2, minmax(130px, 1fr)); }
+      .svgWrap { height: 430px; }
+    }
+
+    @media (max-width: 620px) {
+      header { height: auto; min-height: 58px; align-items: flex-start; flex-direction: column; padding: 10px 12px; }
+      .grid2, .grid3, .diagramTop, .sectionMeta { grid-template-columns: 1fr; }
+      .summary { grid-template-columns: 1fr; }
+      aside, .workspace { padding: 10px; }
+    }
+  </style>
 </head>
 <body>
-    
-    <!-- MAIN WORKSPACE -->
-    <div id="page-input" class="flex h-screen bg-gray-200 overflow-hidden font-sans">
-        
-        <!-- Left Sidebar - Inspector -->
-        <div class="w-80 flex-shrink-0 flex flex-col bg-white shadow-[2px_0_10px_rgba(0,0,0,0.1)] z-10 border-r border-gray-300">
-            <div class="p-3 bg-slate-800 text-white flex justify-between items-center shadow-md z-20">
-                <h1 class="text-[13px] font-bold tracking-wider uppercase m-0 flex items-center">
-                    <svg class="w-4 h-4 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    Plan Inputs
-                </h1>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto p-2 bg-gray-50 overflow-y-auto" style="overflow-y: auto;">
-                <!-- Global Settings -->
-                <div class="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden mb-3">
-                    <button class="w-full flex justify-between items-center p-2 bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-200" onclick="toggleSection('sec-global')">
-                        <span class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Global Settings</span>
-                        <span id="icon-sec-global" class="text-[10px] text-gray-400">▼</span>
-                    </button>
-                    <div id="sec-global" class="p-1.5 flex flex-col">
-                        <div class="flex flex-col py-1.5 border-b border-gray-100 px-1">
-                            <label class="text-xs font-bold text-gray-700 mb-1.5">Beam Configuration</label>
-                            <div class="flex flex-wrap gap-2" id="rg-beamConfiguration">
-                                <!-- Radio buttons generated via JS -->
-                            </div>
-                        </div>
-                        <div class="flex flex-col py-1.5 border-b border-gray-100 px-1">
-                            <label class="text-xs font-bold text-gray-700 mb-1.5">Support Condition</label>
-                            <div class="flex flex-wrap gap-2" id="rg-supportCondition"></div>
-                        </div>
-                        <div class="flex flex-col py-1.5 px-1">
-                            <label class="text-xs font-bold text-gray-700 mb-1.5">Load Mode</label>
-                            <div class="flex flex-wrap gap-2" id="rg-loadCalculationMode"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Storage Area -->
-                <div class="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden mb-3">
-                    <button class="w-full flex justify-between items-center p-2 bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-200" onclick="toggleSection('sec-area')">
-                        <span class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Storage Area</span>
-                        <span id="icon-sec-area" class="text-[10px] text-gray-400">▼</span>
-                    </button>
-                    <div id="sec-area" class="p-1.5 flex flex-col">
-                        <div class="input-row"><label class="input-label">Length (Outer):</label><input type="number" id="in-overallLength" class="input-box hide-spinners"></div>
-                        <div class="input-row"><label class="input-label">Width (Outer):</label><input type="number" id="in-overallWidth" class="input-box hide-spinners"></div>
-                    </div>
-                </div>
-
-                <!-- Structural Components -->
-                <div class="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden mb-3">
-                    <button class="w-full flex justify-between items-center p-2 bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-200" onclick="toggleSection('sec-struct')">
-                        <span class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Structural Components</span>
-                        <span id="icon-sec-struct" class="text-[10px] text-gray-400">▼</span>
-                    </button>
-                    <div id="sec-struct" class="p-1.5 flex flex-col">
-                        <div class="input-row"><label class="input-label">Main Frame Width:</label><input type="number" id="in-blueSupportWidth" class="input-box hide-spinners"></div>
-                        <div class="input-row"><label class="input-label">Spacer Supp. Beam Width:</label><input type="number" id="in-greenSheetWidth" class="input-box hide-spinners"></div>
-                        <div class="input-row"><label class="input-label">Corner Col Size:</label><input type="number" id="in-redSquareSize" class="input-box hide-spinners"></div>
-                        <div class="input-row"><label class="input-label">Vert Post Thickness:</label><input type="number" id="in-topRedSupportWidth" class="input-box hide-spinners"></div>
-                        <div class="input-row"><label class="input-label">Back Post Height:</label><input type="number" id="in-topRedSupportHeight" class="input-box hide-spinners"></div>
-                        
-                        <div class="pt-1.5 border-t border-gray-100">
-                            <div class="input-row cursor-pointer" onclick="toggleCheckbox('in-hasRearBeam')">
-                                <label class="input-label cursor-pointer">Add Rear Beam</label>
-                                <input type="checkbox" id="in-hasRearBeam" class="h-3.5 w-3.5 text-blue-600 rounded cursor-pointer" onclick="event.stopPropagation()">
-                            </div>
-                            <div id="wrap-rearBeamOffset" class="pl-4 pb-1"><div class="input-row"><label class="input-label">Offset (Y=0):</label><input type="number" id="in-rearBeamOffset" class="input-box hide-spinners"></div></div>
-                            
-                            <div class="input-row cursor-pointer" onclick="toggleCheckbox('in-hasFrontBeam')">
-                                <label class="input-label cursor-pointer">Add Front Beam</label>
-                                <input type="checkbox" id="in-hasFrontBeam" class="h-3.5 w-3.5 text-blue-600 rounded cursor-pointer" onclick="event.stopPropagation()">
-                            </div>
-                            <div id="wrap-frontBeamOffset" class="pl-4 pb-1"><div class="input-row"><label class="input-label">Offset (Width):</label><input type="number" id="in-frontBeamOffset" class="input-box hide-spinners"></div></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Steel Sheet -->
-                <div class="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden mb-3">
-                    <button class="w-full flex justify-between items-center p-2 bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-200" onclick="toggleSection('sec-sheet')">
-                        <span class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Steel Sheet</span>
-                        <span id="icon-sec-sheet" class="text-[10px] text-gray-400">▼</span>
-                    </button>
-                    <div id="sec-sheet" class="p-1.5 flex flex-col">
-                        <div class="input-row"><label class="input-label">Sheet Start X-Offset:</label><input type="number" id="in-steelSheetStartXOffset" class="input-box hide-spinners"></div>
-                        <div class="input-row"><label class="input-label">Sheet Length:</label><input type="number" id="in-steelSheetActualLength" class="input-box hide-spinners"></div>
-                        <div class="input-row"><label class="input-label">Sheet Width:</label><input type="number" id="in-steelSheetActualWidth" class="input-box hide-spinners"></div>
-                        <div class="input-row"><label class="input-label">Back Stop Offset:</label><input type="number" id="in-gapFromFirstGreenBeamToBackPost" class="input-box hide-spinners"></div>
-                        <div class="pt-1 border-t border-gray-100">
-                            <div class="input-row cursor-pointer" onclick="toggleCheckbox('in-showSteelSheet')">
-                                <label class="input-label cursor-pointer">Show Steel Sheet</label>
-                                <input type="checkbox" id="in-showSteelSheet" class="h-3.5 w-3.5 text-blue-600 rounded cursor-pointer" onclick="event.stopPropagation()">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Material Properties -->
-                <div class="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden mb-3">
-                    <button class="w-full flex justify-between items-center p-2 bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-200" onclick="toggleSection('sec-mat')">
-                        <span class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Material Properties</span>
-                        <span id="icon-sec-mat" class="text-[10px] text-gray-400">▼</span>
-                    </button>
-                    <div id="sec-mat" class="p-1.5 flex flex-col">
-                        <div class="input-row"><label class="input-label">Sheet Thickness (mm):</label><input type="number" step="0.1" id="in-steelThickness" class="input-box hide-spinners"></div>
-                        <div class="input-row"><label class="input-label">Unit Weight (kN/m³):</label><input type="number" step="0.1" id="in-unitWeightOfSteel" class="input-box hide-spinners"></div>
-                    </div>
-                </div>
-
-                <!-- Spacer Beams -->
-                <div id="sec-spacer-container" class="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden mb-3 hidden">
-                    <button class="w-full flex justify-between items-center p-2 bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-200" onclick="toggleSection('sec-spacers')">
-                        <span class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Spacer Beams</span>
-                        <span id="icon-sec-spacers" class="text-[10px] text-gray-400">▼</span>
-                    </button>
-                    <div id="sec-spacers" class="p-1.5 flex flex-col">
-                        <div class="input-row">
-                            <label class="input-label">Spacer Profile:</label>
-                            <select id="in-selectedSpacerProfile" class="w-24 p-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white"></select>
-                        </div>
-                        <div class="input-row"><label class="input-label">Spacer Height:</label><input type="number" id="in-spacerBeamThickness" class="input-box hide-spinners"></div>
-                        
-                        <div id="spacer-list-container"></div>
-                        
-                        <div class="flex space-x-2 pt-2 px-1 pb-1">
-                            <button onclick="addSpacer()" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold text-[10px] uppercase tracking-wider py-1.5 rounded shadow-sm transition-colors">Add Spacer</button>
-                            <button onclick="removeSpacer()" class="flex-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-[10px] uppercase tracking-wider py-1.5 rounded transition-colors">Remove</button>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-            
-            <!-- Bottom Action Bar -->
-            <div class="p-3 bg-white border-t border-gray-200 flex flex-col gap-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
-                <div class="flex gap-2">
-                    <button onclick="setPage('landscape')" class="flex-1 py-1.5 bg-green-600 hover:bg-green-700 text-white border border-green-700 text-[10px] font-bold uppercase tracking-wider rounded transition-colors">Landscape Drawing</button>
-                    <button onclick="setPage('tributary')" class="flex-1 py-1.5 bg-purple-600 hover:bg-purple-700 text-white border border-purple-700 text-[10px] font-bold uppercase tracking-wider rounded transition-colors">Tributary & Loads</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Workspace -->
-        <div class="flex-1 flex flex-col p-6 overflow-y-auto bg-gray-200 items-start" style="overflow-y: auto;">
-            <div id="validation-warning" class="hidden bg-red-100/90 text-red-700 p-4 font-semibold text-sm rounded shadow w-full">Please enter valid positive dimensions.</div>
-            
-            <div id="main-content" class="w-full flex flex-col max-w-6xl mx-auto hidden">
-                
-                <!-- Live Plan Preview -->
-                <div class="w-full min-h-[350px] bg-white border border-gray-300 rounded-lg shadow-md mb-6 overflow-hidden relative flex-shrink-0 flex flex-col">
-                    <div class="bg-slate-800 text-white px-4 py-2 flex justify-between items-center z-10 shrink-0">
-                        <h3 class="text-xs font-bold tracking-wide uppercase m-0 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            Live Plan Preview
-                        </h3>
-                        <button onclick="setPage('landscape')" class="text-[10px] bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded text-white transition-colors">Expand Fullscreen</button>
-                    </div>
-                    <div id="canvas-container" class="relative flex-1 w-full bg-white">
-                        <canvas id="main-canvas" style="display: block; position: absolute; top: 0; left: 0;"></canvas>
-                    </div>
-                </div>
-
-                <!-- Beam Analysis & Design -->
-                <div id="analysis-panel" class="w-full hidden">
-                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-md border border-gray-200 w-full mb-10">
-                        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3">
-                            <h2 class="text-lg font-bold text-slate-800 uppercase tracking-wider flex items-center">
-                                <svg class="w-5 h-5 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                Beam Analysis & Design
-                            </h2>
-                        </div>
-                        
-                        <!-- Compact Control Bar -->
-                        <div class="flex flex-wrap items-center gap-3 mb-5 p-2.5 border border-gray-200 rounded-md bg-gray-50 shadow-sm">
-                            <div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden shadow-sm">
-                                <label class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-2 py-1.5 bg-gray-100 border-r border-gray-300">Fy (MPa)</label>
-                                <input type="number" id="in-fy" step="10" class="w-16 p-1.5 text-center focus:outline-none focus:bg-blue-50 font-mono text-xs">
-                            </div>
-                            <div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden shadow-sm">
-                                <label class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-2 py-1.5 bg-gray-100 border-r border-gray-300">DL Factor</label>
-                                <input type="number" id="in-deadLoadFactor" step="0.05" class="w-16 p-1.5 text-center focus:outline-none focus:bg-blue-50 font-mono text-xs">
-                            </div>
-                            <div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden shadow-sm">
-                                <label class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-2 py-1.5 bg-gray-100 border-r border-gray-300">LL Factor</label>
-                                <input type="number" id="in-liveLoadFactor" step="0.05" class="w-16 p-1.5 text-center focus:outline-none focus:bg-blue-50 font-mono text-xs">
-                            </div>
-                            <div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden shadow-sm flex-1 min-w-[250px]">
-                                <label class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-2 py-1.5 bg-gray-100 border-r border-gray-300 whitespace-nowrap">Profile</label>
-                                <select id="in-selectedProfile" class="w-full p-1.5 focus:outline-none text-xs font-medium cursor-pointer bg-transparent"></select>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-wrap gap-4 mb-6">
-                            <div class="bg-slate-800 text-white p-4 rounded-lg flex-1 shadow-md flex items-center justify-between">
-                                <div>
-                                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Total Sheet Weight</p>
-                                    <p class="text-2xl font-mono font-bold"><span id="out-sheetWeightKG">0.0</span> <span class="text-sm font-normal text-slate-400">kg</span></p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Sheet Force</p>
-                                    <p class="text-xl font-mono font-bold text-blue-400"><span id="out-sheetWeightKN">0.0</span> <span class="text-sm font-normal text-slate-400">kN</span></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="border-b pb-6 mb-6">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                                <span id="out-criticalBeamName" class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-sm mr-2">Critical Beam: -</span>
-                                Design Checks
-                            </h3>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="space-y-4">
-                                    <div class="bg-gray-50 p-4 rounded border">
-                                        <p class="text-sm text-gray-600 mb-1">Max Factored Bending Moment (M_Ed)</p>
-                                        <p class="text-2xl font-bold font-mono text-gray-900"><span id="out-maxMoment">0.00</span> <span class="text-sm text-gray-500">kNm</span></p>
-                                    </div>
-                                    <div id="panel-momentRes" class="bg-gray-50 p-4 rounded border">
-                                        <p class="text-sm text-gray-600 mb-1">Plastic Moment Resistance (Mpl,Rd,y)</p>
-                                        <p class="text-2xl font-bold font-mono text-gray-900"><span id="out-plasticMoment">0.00</span> <span class="text-sm text-gray-500">kNm</span></p>
-                                    </div>
-                                </div>
-                                
-                                <div id="panel-checks" class="space-y-3">
-                                    <div id="check-moment-bg" class="p-4 rounded border flex justify-between items-center bg-gray-50 border-gray-200">
-                                        <div>
-                                            <p class="text-sm font-bold text-gray-800">Moment Check</p>
-                                            <p class="text-xs text-gray-600"><span id="check-moment-val">0.00 &le; 0.00</span></p>
-                                        </div>
-                                        <span id="check-moment-status" class="font-bold px-3 py-1 rounded-full text-xs">PASS</span>
-                                    </div>
-                                    <div id="check-deflection-bg" class="p-4 rounded border flex justify-between items-center bg-gray-50 border-gray-200">
-                                        <div>
-                                            <p class="text-sm font-bold text-gray-800">Deflection Check</p>
-                                            <p class="text-xs text-gray-600"><span id="check-deflection-val">0.00 &le; 0.00</span></p>
-                                        </div>
-                                        <span id="check-deflection-status" class="font-bold px-3 py-1 rounded-full text-xs">PASS</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="panel-utilization" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                                <div class="flex flex-col sm:flex-row items-center justify-between p-4 rounded bg-blue-50 border border-blue-200">
-                                    <div class="flex items-center">
-                                        <span class="text-sm font-bold text-gray-800 mr-3">Utilization:</span>
-                                        <span id="out-utilization" class="text-lg font-mono font-bold text-blue-800">0.00%</span>
-                                    </div>
-                                    <div class="flex items-center mt-2 sm:mt-0">
-                                        <label class="text-xs font-bold text-gray-600 uppercase tracking-wider mr-2">Sheet t (mm):</label>
-                                        <input type="number" min="1" max="50" step="0.1" id="in-sheetT2" class="p-1 border border-blue-300 rounded w-20 text-center font-mono text-sm bg-white">
-                                    </div>
-                                </div>
-                                <div id="check-thickness-bg" class="flex flex-col sm:flex-row items-center justify-between p-4 rounded border bg-gray-50 border-gray-200">
-                                    <div class="flex items-center">
-                                        <span class="text-sm font-bold text-gray-800 mr-3">Max Sheet t:</span>
-                                        <span id="out-maxSheetT" class="text-lg font-mono font-bold">N/A</span>
-                                    </div>
-                                    <div class="text-[10px] text-gray-500 uppercase tracking-wider mt-1 sm:mt-0">Limit: <span id="out-limitingFactor">-</span></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Reactions Table -->
-                        <div class="mb-8">
-                            <h3 class="text-lg font-bold text-gray-800 mb-3">Total Reactions Summary</h3>
-                            <div class="overflow-x-auto border border-gray-200 rounded">
-                                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="px-4 py-2 text-left text-xs font-bold text-gray-600 uppercase border-r">Beam Name</th>
-                                            <th class="px-4 py-2 text-center text-xs font-bold text-gray-600 uppercase border-r" colspan="2">Service Total (Unfactored)</th>
-                                            <th class="px-4 py-2 text-center text-xs font-bold text-gray-600 uppercase" colspan="2">Factored Total (ULS)</th>
-                                        </tr>
-                                        <tr class="bg-gray-100">
-                                            <th class="border-r"></th>
-                                            <th class="px-4 py-1 text-[10px] text-gray-500 uppercase text-center border-r">Supp A (L)</th>
-                                            <th class="px-4 py-1 text-[10px] text-gray-500 uppercase text-center border-r">Supp B (R)</th>
-                                            <th class="px-4 py-1 text-[10px] text-gray-500 uppercase text-center border-r">Supp A (L)</th>
-                                            <th class="px-4 py-1 text-[10px] text-gray-500 uppercase text-center">Supp B (R)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tb-reactions" class="bg-white divide-y divide-gray-200"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Breakdown Table -->
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-800 mb-3">Reactions Breakdown (By Load Type)</h3>
-                            <div class="overflow-x-auto border border-gray-200 rounded">
-                                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th rowspan="2" class="px-3 py-2 text-left text-xs font-bold text-gray-600 uppercase border-r bg-gray-50">Beam</th>
-                                            <th colspan="2" class="px-3 py-1.5 text-center text-[10px] font-bold text-gray-500 uppercase border-r border-b">Service DL (kN)</th>
-                                            <th colspan="2" class="px-3 py-1.5 text-center text-[10px] font-bold text-gray-500 uppercase border-r border-b">Service LL (kN)</th>
-                                            <th colspan="2" class="px-3 py-1.5 text-center text-[10px] font-bold text-gray-500 uppercase border-r border-b">Factored DL (kN)</th>
-                                            <th colspan="2" class="px-3 py-1.5 text-center text-[10px] font-bold text-gray-500 uppercase border-b">Factored LL (kN)</th>
-                                        </tr>
-                                        <tr class="bg-gray-100">
-                                            <th class="px-2 py-1 text-center text-[10px] text-gray-400 uppercase border-r">Supp A</th>
-                                            <th class="px-2 py-1 text-center text-[10px] text-gray-400 uppercase border-r">Supp B</th>
-                                            <th class="px-2 py-1 text-center text-[10px] text-gray-400 uppercase border-r">Supp A</th>
-                                            <th class="px-2 py-1 text-center text-[10px] text-gray-400 uppercase border-r">Supp B</th>
-                                            <th class="px-2 py-1 text-center text-[10px] text-gray-400 uppercase border-r">Supp A</th>
-                                            <th class="px-2 py-1 text-center text-[10px] text-gray-400 uppercase border-r">Supp B</th>
-                                            <th class="px-2 py-1 text-center text-[10px] text-gray-400 uppercase border-r">Supp A</th>
-                                            <th class="px-2 py-1 text-center text-[10px] text-gray-400 uppercase">Supp B</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tb-breakdown" class="bg-white divide-y divide-gray-200"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
+  <header>
+    <div>
+      <h1>RackFrame2D</h1>
+      <div class="tag">2D elastic frame solver with Frame3DD-style export</div>
     </div>
+    <div class="tag">Units: N, mm, rad</div>
+  </header>
 
-    <!-- TRIBUTARY PAGE -->
-    <div id="page-tributary" class="hidden flex flex-col items-center justify-start w-full min-h-screen bg-gray-100 p-6 font-sans antialiased overflow-y-auto">
-        <div class="w-full max-w-4xl flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Tributary & Loads Summary</h2>
-            <button onclick="setPage('input')" class="px-4 py-2 bg-slate-700 text-white font-semibold rounded-md shadow hover:bg-slate-800 transition">Back to Workspace</button>
+  <main>
+    <aside>
+      <section>
+        <h2>Geometry</h2>
+        <div class="body">
+          <div class="grid2">
+            <label>Column height
+              <input id="columnHeight" type="number" value="3600" step="10">
+            </label>
+            <label>Arm length
+              <input id="armLength" type="number" value="2400" step="10">
+            </label>
+          </div>
+          <label>Arm heights from base
+            <input id="armHeights" value="0, 1500, 3000">
+          </label>
+          <label>Tip point loads downward
+            <input id="tipLoads" value="0, 8000, 8000">
+          </label>
+          <label>UDL on arms downward
+            <input id="udlLoads" value="0, 0, 0">
+          </label>
         </div>
-        <div id="trib-content" class="w-full max-w-4xl flex flex-col bg-white shadow-lg border border-gray-300 rounded-md overflow-hidden">
-            <div class="bg-slate-100 p-4 border-b border-gray-200">
-                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Calculation Summary
-                </h3>
-            </div>
-            <div class="p-6">
-                <ul id="trib-list" class="text-sm"></ul>
-                
-                <div class="mt-8 bg-gray-50 p-4 rounded border border-gray-200">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-sm font-bold text-gray-500 uppercase">Total Area</span>
-                        <span id="out-totArea" class="text-lg font-mono font-bold text-gray-800">0.00 mm²</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm font-bold text-gray-500 uppercase">System Load</span>
-                        <span id="out-totLoad" class="text-lg font-mono font-bold text-blue-700">0.00 kN</span>
-                    </div>
-                </div>
+      </section>
 
-                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 mt-8 border-b pb-2">Summary Details</h3>
-                <ul class="space-y-3 text-base">
-                    <li class="flex justify-between items-center">
-                        <span class="text-gray-600">Total Sheet Weight:</span>
-                        <strong id="out-sheetWtSum" class="font-mono text-gray-900">0.00 KG</strong>
-                    </li>
-                    <li id="li-restingSum" class="flex justify-between items-center">
-                        <span class="text-gray-600">Sum of Point Loads on Resting Spacers:</span>
-                        <strong id="out-restingSum" class="font-mono text-gray-900">0.00 kN</strong>
-                    </li>
-                </ul>
-                
-                <div id="panel-critBeam" class="mt-8 p-4 bg-red-50 border border-red-200 rounded text-center flex flex-col hidden">
-                    <span class="text-sm font-bold text-red-500 uppercase mb-1">Critical Bending Beam</span>
-                    <span id="out-critBeamTitle" class="text-2xl font-bold text-red-700">-</span>
-                </div>
-            </div>
+      <section>
+        <h2>Section</h2>
+        <div class="body">
+          <div class="grid2">
+            <label>Arm family
+              <select id="armFamily"></select>
+            </label>
+            <label>Column family
+              <select id="columnFamily"></select>
+            </label>
+          </div>
+          <label>Arm section
+            <select id="armSection"></select>
+          </label>
+          <div class="grid2">
+            <label>Arm bending axis
+              <select id="armAxis"></select>
+            </label>
+            <label>Column bending axis
+              <select id="columnAxis"></select>
+            </label>
+          </div>
+          <label>Column section
+            <select id="columnSection"></select>
+          </label>
+          <div id="sectionMeta" class="sectionMeta"></div>
+          <div class="grid3">
+            <label>E
+              <input id="E" type="number" value="210000" step="1000">
+            </label>
+            <label>A
+              <input id="A" type="number" value="2400" step="10">
+            </label>
+            <label>Izz
+              <input id="I" type="number" value="18000000" step="100000">
+            </label>
+          </div>
+          <div class="grid2">
+            <label>Column A multiplier
+              <input id="colAMult" type="number" value="1" step="0.05">
+            </label>
+            <label>Column I multiplier
+              <input id="colIMult" type="number" value="1" step="0.05">
+            </label>
+          </div>
+          <div class="note" id="catalogNote">Manual section properties are used if the catalog file is not available.</div>
         </div>
-        <div id="trib-error" class="hidden bg-red-100/90 text-red-700 p-6 font-semibold text-lg rounded shadow mt-10">No tributary data available. Please check inputs.</div>
+      </section>
+
+      <section>
+        <h2>Supports And Hinges</h2>
+        <div class="body">
+          <div class="grid2">
+            <label>Column base
+              <select id="leftSupport">
+                <option value="pin">Pin</option>
+                <option value="fixed" selected>Fixed</option>
+                <option value="roller-y">Vertical roller</option>
+                <option value="free">Free</option>
+              </select>
+            </label>
+            <label>Right bottom support
+              <select id="rightSupport">
+                <option value="pin" selected>Pin</option>
+                <option value="roller-y">Vertical roller</option>
+                <option value="fixed">Fixed</option>
+                <option value="free">Free</option>
+              </select>
+            </label>
+          </div>
+          <label>Bottom member end release
+            <select id="bottomRelease">
+              <option value="both" selected>Pin both ends</option>
+              <option value="left">Pin column end</option>
+              <option value="right">Pin right end</option>
+              <option value="none">Fixed both ends</option>
+            </select>
+          </label>
+          <label>Deformed shape scale
+            <input id="defScale" type="number" value="0" step="1">
+          </label>
+          <div class="note">Scale 0 uses automatic scaling. End releases are exact in this solver.</div>
+        </div>
+        <div class="actions">
+          <button id="runBtn" class="primary">Analyze</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Method</h2>
+        <div class="body">
+          <div class="note">Plane frame: 3 DOF per node, Euler-Bernoulli members, small displacement stiffness, static condensation for rotational end releases.</div>
+          <div class="warn">Frame3DD export is a 3D input deck embedded in the X-Y plane. Native Frame3DD input does not directly define member-end releases, so released bottom-member behavior is exact here and noted in the export.</div>
+        </div>
+      </section>
+    </aside>
+
+    <div class="workspace">
+      <div id="errorBox" class="error"></div>
+
+      <div class="summary">
+        <div class="metric"><span>Max column sway Ux</span><strong id="mSway">-</strong></div>
+        <div class="metric"><span>Max arm tip Uy</span><strong id="mTip">-</strong></div>
+        <div class="metric"><span>Max shear</span><strong id="mShear">-</strong></div>
+        <div class="metric"><span>Max moment</span><strong id="mMoment">-</strong></div>
+        <div class="metric"><span>Solver status</span><strong id="mStatus">-</strong></div>
+      </div>
+
+      <section>
+        <div class="tabs">
+          <button class="tab active" data-tab="modelTab">Model</button>
+          <button class="tab" data-tab="diagramTab">SFD / BMD</button>
+          <button class="tab" data-tab="tablesTab">Tables</button>
+          <button class="tab" data-tab="exportTab">Frame3DD</button>
+        </div>
+
+        <div id="modelTab" class="tabPanel active">
+          <div class="miniLabel">
+            <span>Black: undeformed. Blue: deformed. Red: load.</span>
+            <span id="scaleLabel"></span>
+          </div>
+          <div class="svgWrap"><svg id="modelSvg" viewBox="0 0 1000 620" role="img" aria-label="Rack frame model"></svg></div>
+        </div>
+
+        <div id="diagramTab" class="tabPanel">
+          <div class="diagramTop">
+            <label>Member
+              <select id="memberSelect"></select>
+            </label>
+            <div class="miniLabel">
+              <span id="diagramInfo"></span>
+              <span>Local sign convention from element end forces</span>
+            </div>
+          </div>
+          <div class="svgWrap"><svg id="diagramSvg" viewBox="0 0 1000 620" role="img" aria-label="Shear and bending moment diagram"></svg></div>
+        </div>
+
+        <div id="tablesTab" class="tabPanel">
+          <h2>Node Displacements</h2>
+          <div id="dispTable" class="tableWrap"></div>
+          <h2 style="margin-top:12px;">Support Reactions</h2>
+          <div id="reactTable" class="tableWrap"></div>
+          <h2 style="margin-top:12px;">Member End Forces</h2>
+          <div id="forceTable" class="tableWrap"></div>
+        </div>
+
+        <div id="exportTab" class="tabPanel">
+          <div class="actions" style="border-top:0; padding:0 0 10px;">
+            <button id="download3dd">Download .3dd</button>
+            <button id="downloadJson">Download JSON</button>
+            <button id="copy3dd">Copy .3dd</button>
+          </div>
+          <textarea id="frame3ddText" spellcheck="false"></textarea>
+          <div class="note">Repository: <a href="https://github.com/pslack/frame3dd" target="_blank" rel="noreferrer">pslack/frame3dd</a>. The deck follows the example input order used by Frame3DD.</div>
+        </div>
+      </section>
     </div>
+  </main>
 
-    <!-- LANDSCAPE PAGE -->
-    <div id="page-landscape" class="hidden fixed inset-0 z-50 flex flex-col bg-gray-100 font-sans antialiased overflow-hidden">
-        <div class="flex justify-between items-center bg-slate-800 text-white px-4 py-2 shrink-0 shadow-sm z-10">
-            <h2 class="text-sm font-semibold tracking-wide uppercase m-0">Detailed Plan (Landscape)</h2>
-            <button onclick="setPage('input')" class="px-4 py-1.5 bg-slate-600 text-white text-xs font-bold rounded shadow hover:bg-slate-500 transition border border-slate-500">Close View</button>
-        </div>
-        <div class="flex-1 w-full p-4 flex flex-col min-h-0 bg-gray-200">
-            <div id="landscape-container" class="relative w-full flex-1 bg-white border border-gray-300 rounded shadow-lg overflow-hidden">
-                <canvas id="landscape-canvas" style="display: block; position: absolute; top: 0; left: 0;"></canvas>
-                <div class="absolute bottom-4 left-4 bg-white/95 p-3 rounded shadow-md text-xs font-medium text-gray-800 pointer-events-none border border-gray-200 backdrop-blur-sm">
-                    <h3 class="font-bold text-[10px] uppercase tracking-wider border-b border-gray-200 mb-1.5 pb-1 text-gray-500">Sheet Properties</h3>
-                    <p class="mb-0.5"><span class="text-gray-500">L:</span> <span id="out-sheetL" class="font-mono">0</span> mm</p>
-                    <p class="mb-0.5"><span class="text-gray-500">W:</span> <span id="out-sheetW" class="font-mono">0</span> mm</p>
-                    <p><span class="text-gray-500">Area:</span> <span id="out-sheetArea" class="font-mono">0</span> mm²</p>
-                </div>
-            </div>
-        </div>
-    </div>
+  <script src="rack-section-catalog.js"></script>
+  <script>
+    "use strict";
 
-    <script>
-        // --- DATA ---
-        const rawSHSData = `
-        | Profile | Wel,y | Wpl,y |
-        |:---|---:|---:|
-        | 40 x 40 x 3.2 | 5.11 | 6.28 |
-        | 40 x 40 x 3.6 | 5.54 | 6.88 |
-        | 40 x 40 x 4.0 | 5.91 | 7.44 |
-        | 40 x 40 x 5.0 | 6.68 | 8.66 |
-        | 40 x 40 x 6.3 | 7.34 | 9.90 |
-        | 50 x 50 x 3.2 | 8.49 | 10.2 |
-        | 50 x 50 x 3.6 | 9.27 | 11.3 |
-        | 50 x 50 x 4.0 | 9.99 | 12.3 |
-        | 50 x 50 x 5.0 | 11.6 | 14.5 |
-        | 50 x 50 x 6.3 | 13.1 | 17.0 |
-        | 50 x 50 x 8.0 | 14.4 | 19.5 |
-        | 60 x 60 x 3.2 | 12.7 | 15.2 |
-        | 60 x 60 x 3.6 | 14.0 | 16.8 |
-        | 60 x 60 x 4.0 | 15.1 | 18.3 |
-        | 60 x 60 x 5.0 | 17.8 | 21.9 |
-        | 60 x 60 x 6.3 | 20.5 | 26.0 |
-        | 60 x 60 x 8.0 | 23.2 | 30.4 |
-        | 70 x 70 x 3.2 | 17.8 | 21.0 |
-        | 70 x 70 x 3.6 | 19.6 | 23.3 |
-        | 70 x 70 x 4.0 | 21.3 | 25.5 |
-        | 70 x 70 x 5.0 | 25.3 | 30.8 |
-        | 70 x 70 x 6.3 | 29.7 | 36.9 |
-        | 70 x 70 x 8.0 | 34.2 | 43.8 |
-        | 70 x 70 x 10.0 | 38.0 | 50.3 |
-        | 80 x 80 x 3.2 | 23.7 | 27.9 |
-        | 80 x 80 x 3.6 | 26.2 | 31.0 |
-        | 80 x 80 x 4.0 | 28.6 | 34.0 |
-        | 80 x 80 x 5.0 | 34.2 | 41.1 |
-        | 80 x 80 x 6.3 | 40.5 | 49.7 |
-        | 80 x 80 x 8.0 | 47.3 | 59.5 |
-        | 80 x 80 x 10.0 | 53.5 | 69.3 |
-        | 90 x 90 x 3.6 | 33.8 | 39.7 |
-        | 90 x 90 x 4.0 | 37.0 | 43.6 |
-        | 90 x 90 x 5.0 | 44.4 | 53.0 |
-        | 90 x 90 x 6.3 | 53.0 | 64.3 |
-        | 90 x 90 x 8.0 | 62.6 | 77.6 |
-        | 90 x 90 x 10.0 | 71.6 | 91.3 |
-        | 100 x 100 x 3.6 | 42.3 | 49.5 |
-        | 100 x 100 x 4.0 | 46.4 | 54.4 |
-        | 100 x 100 x 5.0 | 55.9 | 66.4 |
-        | 100 x 100 x 6.3 | 67.1 | 80.9 |
-        | 100 x 100 x 8.0 | 79.9 | 98.2 |
-        | 100 x 100 x 10.0 | 92.4 | 116 |
-        | 120 x 120 x 4.0 | 68.4 | 79.7 |
-        | 120 x 120 x 5.0 | 83.0 | 97.6 |
-        | 120 x 120 x 6.3 | 100 | 120 |
-        | 120 x 120 x 8.0 | 121 | 146 |
-        | 120 x 120 x 10.0 | 142 | 175 |
-        | 120 x 120 x 12.5 | 164 | 207 |
-        | 140 x 140 x 5.0 | 115 | 135 |
-        | 140 x 140 x 6.3 | 141 | 166 |
-        | 140 x 140 x 8.0 | 171 | 204 |
-        | 140 x 140 x 10.0 | 202 | 246 |
-        | 140 x 140 x 12.5 | 236 | 293 |
-        | 140 x 140 x 14.2 | 256 | 322 |
-        | 140 x 140 x 16.0 | 274 | 350 |
-        | 150 x 150 x 4.0 | 109 | 127 |
-        | 150 x 150 x 5.0 | 134 | 156 |
-        | 150 x 150 x 6.3 | 163 | 192 |
-        | 150 x 150 x 8.0 | 199 | 237 |
-        | 150 x 150 x 10.0 | 236 | 286 |
-        | 150 x 150 x 12.5 | 277 | 342 |
-        | 150 x 150 x 14.2 | 302 | 377 |
-        | 150 x 150 x 16.0 | 324 | 411 |
-        `;
+    const DOF = ["Ux", "Uy", "Rz"];
+    const $ = (id) => document.getElementById(id);
+    let lastResult = null;
 
-        const parseProfileData = (rawData) => {
-            const lines = rawData.trim().split('\n');
-            const dataLines = lines.slice(2);
-            const headers = lines[0].split('|').map(h => h.trim()).filter(h => h !== '');
-            const pIdx = headers.indexOf('Profile'), wyIdx = headers.indexOf('Wel,y'), wpyIdx = headers.indexOf('Wpl,y');
+    function numberValue(id) {
+      const value = Number($(id).value);
+      if (!Number.isFinite(value)) throw new Error("Invalid number in " + id + ".");
+      return value;
+    }
 
-            if (pIdx === -1) return [{ name: 'Error loading profiles', massPerMeter: 0 }];
+    function parseList(id) {
+      const raw = $(id).value.split(",").map((v) => v.trim()).filter(Boolean);
+      const values = raw.map(Number);
+      if (values.some((v) => !Number.isFinite(v))) throw new Error("Invalid comma separated value in " + id + ".");
+      return values;
+    }
 
-            const profiles = dataLines.map(line => {
-                const vals = line.split('|').map(v => v.trim()).filter(v => v !== '');
-                if (vals.length < 3) return null;
+    function uniqueSorted(values) {
+      return [...new Set(values.map((v) => round(v, 8)))].sort((a, b) => a - b);
+    }
 
-                const pName = vals[pIdx], Wel_y = parseFloat(vals[wyIdx]), Wpl_y = parseFloat(vals[wpyIdx]);
-                let h = 0, b = 0, t = 0, massPerMeter = 0, Iy = 0;
-                
-                const dims = pName.match(/(\d+(\.\d+)?)/g);
-                if (dims && dims.length >= 3) {
-                    h = parseFloat(dims[0]); b = parseFloat(dims[1]); t = parseFloat(dims[2]);
-                    massPerMeter = (4 * h * t - 4 * t * t) * 0.00785;
-                    Iy = Wel_y * (h / 20); 
-                }
+    function round(value, digits) {
+      const scale = 10 ** digits;
+      return Math.round(value * scale) / scale;
+    }
 
-                return {
-                    name: `SHS ${pName}`, massPerMeter: massPerMeter || 0, h: h || 0, b: b || 0, t: t || 0, A: 0,
-                    Iy: Iy || 0, Wel_y: Wel_y || 0, Wpl_y: Wpl_y || 0, Iz: Iy || 0, Wel_z: Wel_y || 0, Wpl_z: Wpl_y || 0, Vpl_Rd_z: 0,
-                };
-            }).filter(p => p !== null);
+    function fmt(value, digits = 4) {
+      if (!Number.isFinite(value)) return "-";
+      const abs = Math.abs(value);
+      if (abs > 0 && (abs < 0.001 || abs >= 1000000)) return value.toExponential(3);
+      return value.toLocaleString(undefined, { maximumFractionDigits: digits });
+    }
 
-            return [{ name: 'Select Profile', massPerMeter: 0, h:0, b:0, t:0, A:0, Iy:0, Wel_y:0, Wpl_y:0, Iz:0, Wel_z:0, Wpl_z:0, Vpl_Rd_z:0 }, ...profiles];
+    function sectionCatalog() {
+      return globalThis.RACK_SECTION_CATALOG && Array.isArray(globalThis.RACK_SECTION_CATALOG.sections)
+        ? globalThis.RACK_SECTION_CATALOG
+        : null;
+    }
+
+    function selectOptionValue(select, preferred) {
+      if ([...select.options].some((option) => option.value === preferred)) {
+        select.value = preferred;
+      } else if (select.options.length) {
+        select.value = select.options[0].value;
+      }
+    }
+
+    function populateFamilies(selectId, preferred) {
+      const catalog = sectionCatalog();
+      const select = $(selectId);
+      select.replaceChildren();
+      if (!catalog) return;
+      Object.keys(catalog.families).forEach((family) => {
+        const option = document.createElement("option");
+        option.value = family;
+        option.textContent = family + " (" + catalog.families[family] + ")";
+        select.appendChild(option);
+      });
+      selectOptionValue(select, preferred);
+    }
+
+    function populateSectionSelect(role, preferredId) {
+      const catalog = sectionCatalog();
+      const select = $(role + "Section");
+      select.replaceChildren();
+      if (!catalog) return;
+      const family = $(role + "Family").value;
+      (catalog.byFamily[family] || []).forEach((section) => {
+        const option = document.createElement("option");
+        option.value = section.id;
+        option.textContent = section.label;
+        select.appendChild(option);
+      });
+      selectOptionValue(select, preferredId);
+      populateAxisSelect(role);
+    }
+
+    function populateAxisSelect(role) {
+      const select = $(role + "Axis");
+      const existing = select.value || "major";
+      select.replaceChildren();
+      const section = selectedSection(role);
+      (section?.axes || [
+        { key: "major", label: "Major", I_mm4: Number($("I").value) || 0 },
+        { key: "minor", label: "Minor", I_mm4: Number($("I").value) || 0 }
+      ]).forEach((axis) => {
+        const option = document.createElement("option");
+        option.value = axis.key;
+        option.textContent = axis.label + " - I " + fmt(axis.I_mm4, 0) + " mm4";
+        select.appendChild(option);
+      });
+      selectOptionValue(select, existing);
+    }
+
+    function selectedSection(role) {
+      const catalog = sectionCatalog();
+      return catalog ? catalog.byId[$(role + "Section").value] : null;
+    }
+
+    function selectedMemberProperties(role) {
+      const section = selectedSection(role);
+      if (!section) return null;
+      const axisKey = $(role + "Axis").value || "major";
+      const axis = (section.axes || []).find((item) => item.key === axisKey) || section.axes?.[0];
+      if (!axis || !section.area_mm2 || !axis.I_mm4) return null;
+      return {
+        section,
+        axis,
+        A: section.area_mm2,
+        I: axis.I_mm4,
+        label: section.designation + " " + section.family + " / " + axis.label
+      };
+    }
+
+    function updateSectionInputs() {
+      const catalog = sectionCatalog();
+      const note = $("catalogNote");
+      if (!catalog) {
+        note.textContent = "Section catalog file was not found. Manual A and Izz inputs are active.";
+        return;
+      }
+      const arm = selectedMemberProperties("arm");
+      const column = selectedMemberProperties("column");
+      if (arm) {
+        $("A").value = round(arm.A, 3);
+        $("I").value = round(arm.I, 3);
+      }
+      $("sectionMeta").innerHTML = "";
+      [
+        ["Arm", arm],
+        ["Column", column]
+      ].forEach(([title, props]) => {
+        const item = document.createElement("div");
+        item.textContent = props
+          ? title + ": " + props.label + ", A=" + fmt(props.A, 1) + " mm2, I=" + fmt(props.I, 0) + " mm4"
+          : title + ": manual properties";
+        $("sectionMeta").appendChild(item);
+      });
+      note.textContent = "Catalog loaded: " + Object.entries(catalog.families).map(([k, v]) => k + " " + v).join(", ") + ".";
+    }
+
+    function initSectionCatalog() {
+      populateFamilies("armFamily", "PFC");
+      populateFamilies("columnFamily", "SHS");
+      populateSectionSelect("arm", "PFC|180x75x20");
+      populateSectionSelect("column", "SHS|150 x 150 x 6.3");
+      updateSectionInputs();
+    }
+
+    function zeros(rows, cols) {
+      return Array.from({ length: rows }, () => Array(cols).fill(0));
+    }
+
+    function matVec(A, x) {
+      return A.map((row) => row.reduce((sum, value, i) => sum + value * x[i], 0));
+    }
+
+    function matMul(A, B) {
+      const out = zeros(A.length, B[0].length);
+      for (let i = 0; i < A.length; i++) {
+        for (let k = 0; k < B.length; k++) {
+          if (A[i][k] === 0) continue;
+          for (let j = 0; j < B[0].length; j++) out[i][j] += A[i][k] * B[k][j];
+        }
+      }
+      return out;
+    }
+
+    function transpose(A) {
+      return A[0].map((_, c) => A.map((row) => row[c]));
+    }
+
+    function pickMatrix(A, rows, cols) {
+      return rows.map((r) => cols.map((c) => A[r][c]));
+    }
+
+    function pickVector(v, rows) {
+      return rows.map((r) => v[r]);
+    }
+
+    function subMatrix(A, B) {
+      return A.map((row, i) => row.map((value, j) => value - B[i][j]));
+    }
+
+    function subVector(a, b) {
+      return a.map((value, i) => value - b[i]);
+    }
+
+    function gaussSolve(Ain, bin) {
+      const n = bin.length;
+      const A = Ain.map((row) => row.slice());
+      const b = bin.slice();
+      const scale = Math.max(1, ...A.flat().map((v) => Math.abs(v)));
+      const pivotTolerance = scale * 1e-13;
+      for (let col = 0; col < n; col++) {
+        let pivot = col;
+        let pivotAbs = Math.abs(A[col][col]);
+        for (let r = col + 1; r < n; r++) {
+          const candidate = Math.abs(A[r][col]);
+          if (candidate > pivotAbs) {
+            pivot = r;
+            pivotAbs = candidate;
+          }
+        }
+        if (pivotAbs < pivotTolerance) throw new Error("Stiffness matrix is singular or near-singular near equation " + (col + 1) + ".");
+        if (pivot !== col) {
+          [A[pivot], A[col]] = [A[col], A[pivot]];
+          [b[pivot], b[col]] = [b[col], b[pivot]];
+        }
+        for (let r = col + 1; r < n; r++) {
+          const factor = A[r][col] / A[col][col];
+          if (factor === 0) continue;
+          for (let c = col; c < n; c++) A[r][c] -= factor * A[col][c];
+          b[r] -= factor * b[col];
+        }
+      }
+      const x = Array(n).fill(0);
+      for (let i = n - 1; i >= 0; i--) {
+        let sum = b[i];
+        for (let j = i + 1; j < n; j++) sum -= A[i][j] * x[j];
+        x[i] = sum / A[i][i];
+      }
+      return x;
+    }
+
+    function transformMatrix(c, s) {
+      return [
+        [ c,  s, 0, 0, 0, 0],
+        [-s,  c, 0, 0, 0, 0],
+        [ 0,  0, 1, 0, 0, 0],
+        [ 0,  0, 0, c, s, 0],
+        [ 0,  0, 0,-s, c, 0],
+        [ 0,  0, 0, 0, 0, 1]
+      ];
+    }
+
+    function frameLocalStiffness(E, A, I, L) {
+      const EA = E * A / L;
+      const EI = E * I;
+      const L2 = L * L;
+      const L3 = L2 * L;
+      return [
+        [ EA, 0, 0, -EA, 0, 0],
+        [ 0, 12 * EI / L3, 6 * EI / L2, 0, -12 * EI / L3, 6 * EI / L2],
+        [ 0, 6 * EI / L2, 4 * EI / L, 0, -6 * EI / L2, 2 * EI / L],
+        [-EA, 0, 0, EA, 0, 0],
+        [ 0, -12 * EI / L3, -6 * EI / L2, 0, 12 * EI / L3, -6 * EI / L2],
+        [ 0, 6 * EI / L2, 2 * EI / L, 0, -6 * EI / L2, 4 * EI / L]
+      ];
+    }
+
+    function uniformEquivalent(q, L) {
+      return [0, q * L / 2, q * L * L / 12, 0, q * L / 2, -q * L * L / 12];
+    }
+
+    function condenseReleases(k, f, releases) {
+      const released = [];
+      if (releases.rzI) released.push(2);
+      if (releases.rzJ) released.push(5);
+      const kept = [0, 1, 2, 3, 4, 5].filter((i) => !released.includes(i));
+      if (released.length === 0) {
+        return {
+          kBar: k.map((row) => row.slice()),
+          fBar: f.slice(),
+          released,
+          kept,
+          releaseData: null
         };
+      }
 
-        const ALL_PROFILES = parseProfileData(rawSHSData);
+      const kRR = pickMatrix(k, kept, kept);
+      const kRC = pickMatrix(k, kept, released);
+      const kCR = pickMatrix(k, released, kept);
+      const kCC = pickMatrix(k, released, released);
+      const fR = pickVector(f, kept);
+      const fC = pickVector(f, released);
 
-        // --- STATE ---
-        const state = {
-            overallLength: 1900,
-            overallWidth: 1290,
-            blueSupportWidth: 100,
-            greenSheetWidth: 100,
-            redSquareSize: 100,
-            topRedSupportWidth: 100,
-            topRedSupportHeight: 100,
-            spacerBeamThickness: 60,
-            spacerConfig: [600, 500],
-            gapFromFirstGreenBeamToBackPost: 115,
-            
-            steelSheetStartXOffset: 200,
-            steelSheetActualLength: 1500,
-            steelSheetActualWidth: 1320,
-            steelThickness: 400,
-            unitWeightOfSteel: 77,
-            
-            showSteelSheet: true,
-            loadCalculationMode: 'point_load',
-            supportCondition: 'simply-supported',
-            beamConfiguration: 'four-beams',
-            
-            hasRearBeam: true,
-            rearBeamOffset: 150,
-            hasFrontBeam: true,
-            frontBeamOffset: 150,
-            
-            selectedProfileName: ALL_PROFILES[0].name,
-            selectedSpacerProfileName: (ALL_PROFILES.find(p => p.name === 'SHS 60 x 60 x 5.0') || ALL_PROFILES[0]).name,
-            
-            fy: 355,
-            deadLoadFactor: 1.4,
-            liveLoadFactor: 1.6,
-            EPSILON: 0.01,
-            
-            // Derived Data
-            tributaryData: {},
-            totalTributaryArea: 0,
-            totalPointLoad: 0,
-            calculatedTotalSheetLoad: 0,
-            sumOfRestingPointLoads: 0,
-            beamAnalysisData: null,
-            allBeamsLoadData: [],
-            
-            currentPage: 'input'
-        };
+      const invTimesKCR = [];
+      for (let col = 0; col < kept.length; col++) {
+        invTimesKCR.push(gaussSolve(kCC, kCR.map((row) => row[col])));
+      }
+      const kCCInvKCR = transpose(invTimesKCR);
+      const kCond = subMatrix(kRR, matMul(kRC, kCCInvKCR));
+      const kCCInvFC = gaussSolve(kCC, fC);
+      const fCond = subVector(fR, matVec(kRC, kCCInvFC));
 
-        // --- LOGIC FUNCTIONS ---
-        function calculateBeamForces(condition, span, pointLoads, udlData, factoredSelfWeightUDL_kN_m) {
-            const spanM = span / 1000;
-            if (spanM <= 0) return { RA: 0, RB: 0, maxShear: 0, maxMoment: 0 };
+      const kBar = zeros(6, 6);
+      const fBar = Array(6).fill(0);
+      for (let i = 0; i < kept.length; i++) {
+        fBar[kept[i]] = fCond[i];
+        for (let j = 0; j < kept.length; j++) kBar[kept[i]][kept[j]] = kCond[i][j];
+      }
 
-            if (condition === 'simply-supported') {
-                let totalMomentAtA = 0, totalDownwardForce = 0;
-                if (factoredSelfWeightUDL_kN_m > state.EPSILON) {
-                    totalMomentAtA += (factoredSelfWeightUDL_kN_m * spanM * spanM) / 2;
-                    totalDownwardForce += factoredSelfWeightUDL_kN_m * spanM;
-                }
-                pointLoads.forEach(pl => { totalMomentAtA += pl.load * (pl.x / 1000); totalDownwardForce += pl.load; });
-                if (udlData && udlData.udl > state.EPSILON) {
-                    totalMomentAtA += udlData.udl * (udlData.length / 1000) * (udlData.startX / 1000 + udlData.length / 2000);
-                    totalDownwardForce += udlData.udl * (udlData.length / 1000);
-                }
+      return {
+        kBar,
+        fBar,
+        released,
+        kept,
+        releaseData: { kCC, kCR, fC }
+      };
+    }
 
-                const RB = totalMomentAtA / spanM, RA = totalDownwardForce - RB;
-                let maxMoment = 0;
+    function expandLocalDisplacements(condensed, dLocal) {
+      const d = dLocal.slice();
+      if (!condensed.releaseData) return d;
+      const dR = pickVector(dLocal, condensed.kept);
+      const rhs = subVector(condensed.releaseData.fC, matVec(condensed.releaseData.kCR, dR));
+      const dC = gaussSolve(condensed.releaseData.kCC, rhs);
+      condensed.released.forEach((dof, i) => d[dof] = dC[i]);
+      return d;
+    }
 
-                for (let i = 0; i <= 1000; i++) {
-                    const x = (i / 1000) * spanM;
-                    let mx = RA * x;
-                    pointLoads.forEach(pl => { if (pl.x / 1000 < x) mx -= pl.load * (x - pl.x / 1000); });
-                    if (factoredSelfWeightUDL_kN_m > state.EPSILON) mx -= (factoredSelfWeightUDL_kN_m * x * x) / 2;
-                    if (udlData && udlData.udl > state.EPSILON) {
-                        const a = udlData.startX / 1000, end = a + udlData.length / 1000;
-                        if (x > a) mx -= x <= end ? (udlData.udl * (x - a) * (x - a)) / 2 : udlData.udl * (end - a) * (x - a - (end - a) / 2);
-                    }
-                    maxMoment = Math.max(maxMoment, Math.abs(mx));
-                }
-                return { RA, RB, maxShear: Math.max(Math.abs(RA), Math.abs(RB)), maxMoment };
-            } else { 
-                let MA_fem = 0, MB_fem = 0;
-                pointLoads.forEach(pl => {
-                    const a = pl.x / 1000, b = spanM - a;
-                    MA_fem -= (pl.load * a * b * b) / (spanM * spanM); MB_fem += (pl.load * a * a * b) / (spanM * spanM);
-                });
-                if (factoredSelfWeightUDL_kN_m > 0) {
-                    MA_fem -= (factoredSelfWeightUDL_kN_m * spanM * spanM) / 12; MB_fem += (factoredSelfWeightUDL_kN_m * spanM * spanM) / 12;
-                }
-                if (udlData && udlData.udl > 0) {
-                    const a = udlData.startX / 1000, b = a + udlData.length / 1000, sm2 = spanM * spanM;
-                    MA_fem -= (udlData.udl / (12 * sm2)) * (Math.pow(b, 2) * (6 * sm2 - 8 * spanM * b + 3 * b * b) - Math.pow(a, 2) * (6 * sm2 - 8 * spanM * a + 3 * a * a));
-                    MB_fem += (udlData.udl / (12 * sm2)) * (Math.pow(b, 3) * (4 * spanM - 3 * b) - Math.pow(a, 3) * (4 * spanM - 3 * a));
-                }
-                let R_A_simple = 0;
-                pointLoads.forEach(pl => R_A_simple += pl.load * (spanM - pl.x/1000) / spanM);
-                if (factoredSelfWeightUDL_kN_m > 0) R_A_simple += (factoredSelfWeightUDL_kN_m * spanM) / 2;
-                if (udlData && udlData.udl > 0) R_A_simple += udlData.udl * (udlData.length / 1000) * (spanM - (udlData.startX / 1000 + udlData.length / 2000)) / spanM;
-                
-                const totalLoad = pointLoads.reduce((s, p) => s + p.load, 0) + (factoredSelfWeightUDL_kN_m * spanM) + ((udlData?.udl || 0) * (udlData?.length || 0) / 1000);
-                const RA = R_A_simple - (MA_fem + MB_fem) / spanM, RB = totalLoad - RA;
-                let maxMoment = 0;
+    function dofIndex(nodeId, localDof) {
+      return (nodeId - 1) * 3 + localDof;
+    }
 
-                for (let i = 0; i <= 1000; i++) {
-                    const x = (i / 1000) * spanM;
-                    let mx = 0;
-                    pointLoads.forEach(pl => {
-                        const a = pl.x / 1000; if (a > spanM || a < 0) return;
-                        const b = spanM - a;
-                        mx += x <= a ? - (pl.load * b * b / (spanM ** 3)) * (a * spanM - (spanM + 2 * a) * x) : (pl.load * a * a / (spanM ** 3)) * (spanM * spanM + b * spanM - (spanM + 2 * b) * x);
-                    });
-                    if (factoredSelfWeightUDL_kN_m > 0) mx += (factoredSelfWeightUDL_kN_m / 12) * (6 * spanM * x - spanM * spanM - 6 * x * x);
-                    if (udlData && udlData.udl > 0) {
-                        const w = udlData.udl, a = udlData.startX / 1000, c = a + udlData.length / 1000, sm2 = spanM * spanM;
-                        const MA_udl = - (w / (12 * sm2)) * (Math.pow(c, 2) * (6 * sm2 - 8 * spanM * c + 3 * c * c) - Math.pow(a, 2) * (6 * sm2 - 8 * spanM * a + 3 * a * a));
-                        const MB_udl = + (w / (12 * sm2)) * (Math.pow(c, 3) * (4 * spanM - 3 * c) - Math.pow(a, 3) * (4 * spanM - 3 * a));
-                        const RA_fixed_udl = (w * (c - a) * (spanM - (a + c) / 2)) / spanM - (MA_udl + MB_udl) / spanM;
-                        mx += RA_fixed_udl * x + MA_udl;
-                        if (x > a) mx -= (w * (x-a)*(x-a)) / 2;
-                        if (x > c) mx += (w * (x-c)*(x-c)) / 2;
-                    }
-                    maxMoment = Math.max(maxMoment, Math.abs(mx));
-                }
-                return { RA, RB, maxShear: Math.max(Math.abs(RA), Math.abs(RB)), maxMoment };
-            }
+    function supportRestraints(type) {
+      if (type === "fixed") return [true, true, true];
+      if (type === "pin") return [true, true, false];
+      if (type === "roller-y") return [false, true, false];
+      return [false, false, false];
+    }
+
+    function readModel() {
+      updateSectionInputs();
+      const columnHeight = numberValue("columnHeight");
+      const armLength = numberValue("armLength");
+      const E = numberValue("E");
+      const A = numberValue("A");
+      const I = numberValue("I");
+      const colAMult = numberValue("colAMult");
+      const colIMult = numberValue("colIMult");
+      const armProps = selectedMemberProperties("arm");
+      const columnProps = selectedMemberProperties("column");
+      if (columnHeight <= 0 || armLength <= 0 || E <= 0 || A <= 0 || I <= 0) {
+        throw new Error("Geometry and section properties must be positive.");
+      }
+      const heightsRaw = parseList("armHeights");
+      if (heightsRaw.length === 0) throw new Error("At least one arm height is required.");
+      let heights = uniqueSorted([0, ...heightsRaw]);
+      heights = heights.filter((h) => h >= 0 && h <= columnHeight);
+      if (heights.length === 0) throw new Error("Arm heights must lie between 0 and the column height.");
+      const loads = parseList("tipLoads");
+      const udls = parseList("udlLoads");
+      const pointByHeight = new Map();
+      const udlByHeight = new Map();
+      heights.forEach((h, i) => {
+        pointByHeight.set(h, loads[i] || 0);
+        udlByHeight.set(h, udls[i] || 0);
+      });
+      return {
+        columnHeight,
+        armLength,
+        armHeights: heights,
+        E,
+        A,
+        I,
+        colA: (columnProps ? columnProps.A : A) * colAMult,
+        colI: (columnProps ? columnProps.I : I) * colIMult,
+        armSection: armProps ? armProps.label : "manual arm properties",
+        columnSection: columnProps ? columnProps.label : "manual column properties",
+        pointByHeight,
+        udlByHeight,
+        leftSupport: $("leftSupport").value,
+        rightSupport: $("rightSupport").value,
+        bottomRelease: $("bottomRelease").value,
+        defScale: numberValue("defScale")
+      };
+    }
+
+    function buildFrame(input) {
+      const levels = uniqueSorted([0, input.columnHeight, ...input.armHeights]);
+      const nodes = [];
+      const colNodeAt = new Map();
+      levels.forEach((y) => {
+        const node = { id: nodes.length + 1, x: 0, y, label: "C@" + y };
+        nodes.push(node);
+        colNodeAt.set(y, node.id);
+      });
+
+      const tipNodeAt = new Map();
+      input.armHeights.forEach((y) => {
+        const node = { id: nodes.length + 1, x: input.armLength, y, label: "A@" + y };
+        nodes.push(node);
+        tipNodeAt.set(y, node.id);
+      });
+
+      const elements = [];
+      for (let i = 0; i < levels.length - 1; i++) {
+        const y1 = levels[i];
+        const y2 = levels[i + 1];
+        if (y2 === y1) continue;
+        elements.push({
+          id: elements.length + 1,
+          name: "Column " + y1 + "-" + y2,
+          type: "column",
+          i: colNodeAt.get(y1),
+          j: colNodeAt.get(y2),
+          E: input.E,
+          A: input.colA,
+          I: input.colI,
+          releases: { rzI: false, rzJ: false },
+          qLocalY: 0
+        });
+      }
+
+      input.armHeights.forEach((y) => {
+        const releases = { rzI: false, rzJ: false };
+        if (y === 0) {
+          releases.rzI = input.bottomRelease === "both" || input.bottomRelease === "left";
+          releases.rzJ = input.bottomRelease === "both" || input.bottomRelease === "right";
         }
+        elements.push({
+          id: elements.length + 1,
+          name: (y === 0 ? "Bottom member" : "Cantilever") + " @" + y,
+          type: y === 0 ? "bottom" : "arm",
+          i: colNodeAt.get(y),
+          j: tipNodeAt.get(y),
+          E: input.E,
+          A: input.A,
+          I: input.I,
+          releases,
+          qLocalY: -(input.udlByHeight.get(y) || 0)
+        });
+      });
 
-        function calculateBeamDeflection(condition, spanL_mm, pointLoads_kN, udlData_kN_m, selfWeight_kN_m, E_MPa, I_cm4) {
-            if (!E_MPa || !I_cm4 || !spanL_mm) return 0;
-            const EI = E_MPa * I_cm4 * 10000; if (EI === 0) return 0;
-            const macaulay = (val) => (val > 0 ? val : 0);
-            let maxD = 0, RA_pudl = 0, MA_pudl = 0, a_pudl = 0, c_pudl = 0, L = spanL_mm;
+      const F = Array(nodes.length * 3).fill(0);
+      input.armHeights.forEach((y) => {
+        const tipId = tipNodeAt.get(y);
+        F[dofIndex(tipId, 1)] -= input.pointByHeight.get(y) || 0;
+      });
 
-            if (condition === 'fixed-supports' && udlData_kN_m && udlData_kN_m.udl > 0) {
-                const w = udlData_kN_m.udl, a = udlData_kN_m.startX, c = a + udlData_kN_m.length, L2 = L * L;
-                a_pudl = a; c_pudl = c;
-                MA_pudl = -(w / (12 * L2)) * (Math.pow(L - a, 3) * (L + 3 * a) - Math.pow(L - c, 3) * (L + 3 * c));
-                const MB = -(w / (12 * L2)) * (Math.pow(c, 3) * (4 * L - 3 * c) - Math.pow(a, 3) * (4 * L - 3 * a));
-                RA_pudl = (w * (c - a) * (L - (a + c) / 2)) / L - (MA_pudl - MB) / L;
-            }
+      const restraints = Array(nodes.length * 3).fill(false);
+      const leftNode = colNodeAt.get(0);
+      const rightNode = tipNodeAt.get(0);
+      supportRestraints(input.leftSupport).forEach((fixed, d) => {
+        if (fixed) restraints[dofIndex(leftNode, d)] = true;
+      });
+      supportRestraints(input.rightSupport).forEach((fixed, d) => {
+        if (fixed) restraints[dofIndex(rightNode, d)] = true;
+      });
 
-            for (let i = 0; i <= 1000; i++) {
-                const x = (i / 1000) * L; let tD = 0;
-                if (condition === 'simply-supported') {
-                    if (selfWeight_kN_m > 0) tD += (selfWeight_kN_m * x * (L**3 - 2*L*x*x + x**3)) / (24 * EI);
-                    pointLoads_kN.forEach(pl => {
-                        const P = pl.load * 1000, a = pl.x, b = L - a;
-                        tD += x <= a ? (P * b * x) / (6 * EI * L) * (L*L - b*b - x*x) : (P * a * (L - x)) / (6 * EI * L) * (L*L - a*a - (L-x)**2);
-                    });
-                    if (udlData_kN_m && udlData_kN_m.udl > 0) {
-                        const w = udlData_kN_m.udl, a = udlData_kN_m.startX, c = a + udlData_kN_m.length;
-                        const RA = (w * (c - a) * (L - (a + c) / 2)) / L;
-                        const C1 = (1/L) * ((w/24) * (macaulay(L-a)**4 - macaulay(L-c)**4) - (RA * L**3 / 6));
-                        tD += (1/EI) * ((RA * x**3 / 6) - (w/24) * macaulay(x-a)**4 + (w/24) * macaulay(x-c)**4 + C1 * x);
-                    }
-                } else {
-                    if (selfWeight_kN_m > 0) tD += (selfWeight_kN_m * x*x * (L-x)**2) / (24 * EI);
-                    if (udlData_kN_m && udlData_kN_m.udl > 0) tD += (RA_pudl * x**3 / (6*EI)) + (MA_pudl * x**2 / (2*EI)) - (udlData_kN_m.udl / (24*EI)) * macaulay(x-a_pudl)**4 + (udlData_kN_m.udl / (24*EI)) * macaulay(x-c_pudl)**4;
-                    pointLoads_kN.forEach(pl => {
-                        const P = pl.load * 1000, a = pl.x; if (a > L || a < 0) return;
-                        const b = L - a, RA = (P * b*b * (L + 2*a)) / L**3, MA = - (P * a * b*b) / L**2;
-                        tD += (RA * x**3 / (6*EI)) + (MA * x**2 / (2*EI)) - (P * macaulay(x-a)**3) / (6*EI);
-                    });
-                }
-                if (Math.abs(tD) > Math.abs(maxD)) maxD = tD;
-            }
-            return Math.abs(maxD);
+      return { input, nodes, elements, F, restraints, colNodeAt, tipNodeAt };
+    }
+
+    function analyze(frame) {
+      const nDof = frame.nodes.length * 3;
+      const K = zeros(nDof, nDof);
+      const F = frame.F.slice();
+      const prepared = [];
+
+      frame.elements.forEach((el) => {
+        const ni = frame.nodes[el.i - 1];
+        const nj = frame.nodes[el.j - 1];
+        const dx = nj.x - ni.x;
+        const dy = nj.y - ni.y;
+        const L = Math.hypot(dx, dy);
+        if (L <= 0) throw new Error("Zero length element: " + el.name);
+        const c = dx / L;
+        const s = dy / L;
+        const T = transformMatrix(c, s);
+        const kLocal = frameLocalStiffness(el.E, el.A, el.I, L);
+        const fLocal = uniformEquivalent(el.qLocalY || 0, L);
+        const condensed = condenseReleases(kLocal, fLocal, el.releases);
+        const kGlobal = matMul(transpose(T), matMul(condensed.kBar, T));
+        const fGlobal = matVec(transpose(T), condensed.fBar);
+        const map = [0, 1, 2, 3, 4, 5].map((local, idx) => {
+          const node = idx < 3 ? el.i : el.j;
+          return dofIndex(node, idx % 3);
+        });
+
+        for (let a = 0; a < 6; a++) {
+          F[map[a]] += fGlobal[a];
+          for (let b = 0; b < 6; b++) K[map[a]][map[b]] += kGlobal[a][b];
         }
+        prepared.push({ ...el, L, c, s, T, kLocal, fLocal, condensed, map });
+      });
 
-        function drawPlan(ctx, canvas, showAllDimensions, drawSteelSheetFlag, currentLoadCalculationMode, scaleModifier = 1.0) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const isBackstopZero = state.gapFromFirstGreenBeamToBackPost === 0;
-            let y_top_first_green_beam_mm = isBackstopZero ? 0 : state.redSquareSize;
-            let y_top_back_post_mm = isBackstopZero ? 0 : y_top_first_green_beam_mm - state.gapFromFirstGreenBeamToBackPost - state.topRedSupportHeight;
-            let sheetStartY_mm = isBackstopZero ? 0 : y_top_first_green_beam_mm - state.gapFromFirstGreenBeamToBackPost;
-
-            let cMinX = showAllDimensions ? -350 : 0;
-            let cMaxX = Math.max(state.overallLength, drawSteelSheetFlag ? state.steelSheetStartXOffset + state.steelSheetActualLength : 0) + (showAllDimensions ? 50 : 0);
-            let cMinY = Math.min(isBackstopZero ? 0 : y_top_back_post_mm, state.hasRearBeam ? -state.rearBeamOffset : 0) - (showAllDimensions ? 100 : 0);
-            let cMaxY = Math.max(state.overallWidth, state.hasFrontBeam ? state.overallWidth + state.frontBeamOffset + state.greenSheetWidth : state.overallWidth, drawSteelSheetFlag ? sheetStartY_mm + state.steelSheetActualWidth : 0) + (showAllDimensions ? 400 : 0);
-
-            let sf = Math.min((canvas.width / window.devicePixelRatio - 60) / (cMaxX - cMinX || 1), (canvas.height / window.devicePixelRatio - 60) / (cMaxY - cMinY || 1));
-            if (!isFinite(sf) || sf <= 0) sf = 0.05;
-            sf *= scaleModifier;
-
-            const sc = v => v * sf;
-            const scPL = sc(state.overallLength), scPW = sc(state.overallWidth), scBW = sc(state.blueSupportWidth), scGW = sc(state.greenSheetWidth), scRS = sc(state.redSquareSize);
-            const ty1G = sc(y_top_first_green_beam_mm), tyBP = sc(y_top_back_post_mm), sy = sc(sheetStartY_mm);
-
-            const translateY = (canvas.height / window.devicePixelRatio - (cMaxY - cMinY) * sf) / 2 - (cMinY * sf);
-
-            ctx.save();
-            ctx.translate((canvas.width / window.devicePixelRatio - (cMaxX - cMinX) * sf) / 2 - (cMinX * sf), translateY);
-
-            // Purple Outline
-            ctx.strokeStyle = 'purple'; ctx.lineWidth = 1.5;
-            ctx.strokeRect(0, 0, scPL, scPW);
-
-            // Blue supports
-            const minY_blue = state.hasRearBeam ? sc(-state.rearBeamOffset) : 0;
-            const maxY_blue = state.hasFrontBeam ? scPW + sc(state.frontBeamOffset) : scPW;
-            ctx.fillStyle = 'blue';
-            ctx.fillRect(0, minY_blue, scBW, maxY_blue - minY_blue); 
-            ctx.fillRect(scPL - scBW, minY_blue, scBW, maxY_blue - minY_blue);
-
-            // Green Beams
-            const activeBeams = [];
-            if (state.hasRearBeam) activeBeams.push({ name: "Rear Transverse Beam", y: sc(-state.rearBeamOffset) });
-            const fBP = { name: "Transverse Beam 1", y: isBackstopZero ? 0 : ty1G };
-            const lBP = { name: "Transverse Beam Last", y: scPW - (isBackstopZero ? 0 : scRS) - scGW };
-            
-            if (state.beamConfiguration === 'two-beams') activeBeams.push(fBP, { ...lBP, name: "Transverse Beam 2" });
-            else if (state.beamConfiguration === 'three-beams') activeBeams.push(fBP, { name: "Transverse Beam 2", y: (fBP.y + lBP.y) / 2 }, { ...lBP, name: "Transverse Beam 3" });
-            else activeBeams.push(fBP, { name: "Transverse Beam 2", y: fBP.y + (lBP.y - fBP.y) / 3 }, { name: "Transverse Beam 3", y: fBP.y + 2 * (lBP.y - fBP.y) / 3 }, { ...lBP, name: "Transverse Beam 4" });
-            if (state.hasFrontBeam) activeBeams.push({ name: "Front Transverse Beam", y: scPW + sc(state.frontBeamOffset) - scGW });
-
-            const drawCircledText = (text, x, y, bg = 'green', fg = 'white') => {
-                const r = 35 * sf;
-                ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2, true);
-                ctx.strokeStyle = 'black'; ctx.lineWidth = 1.5; ctx.stroke();
-                ctx.fillStyle = bg; ctx.fill();
-                ctx.fillStyle = fg; ctx.font = `bold ${40 * sf}px Inter, sans-serif`;
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y);
-            };
-
-            ctx.fillStyle = 'green';
-            activeBeams.forEach((beam, i) => {
-                ctx.fillRect(0, beam.y, scPL, scGW);
-                let lbl = `TB${i + 1}`;
-                if (state.hasRearBeam && i === 0) lbl = "RTB";
-                else if (state.hasFrontBeam && i === activeBeams.length - 1) lbl = "FTB";
-                else if (state.hasRearBeam) lbl = `TB${i}`; 
-                drawCircledText(lbl, scBW + (scPL - scBW * 2) / 4, beam.y + scGW / 2);
-                ctx.fillStyle = 'green';
-            });
-
-            // Red corner columns
-            if (!isBackstopZero) {
-                ctx.fillStyle = 'red';
-                ctx.fillRect(0, 0, scRS, scRS); ctx.fillRect(scPL - scRS, 0, scRS, scRS);
-                ctx.fillRect(0, scPW - scRS, scRS, scRS); ctx.fillRect(scPL - scRS, scPW - scRS, scRS, scRS);
-                const rpDist = sc(state.overallLength / 3), rW = sc(state.topRedSupportWidth);
-                ctx.fillRect(scPL / 2 - rpDist / 2 - rW / 2, tyBP, rW, sc(state.topRedSupportHeight));
-                ctx.fillRect(scPL / 2 + rpDist / 2 - rW / 2, tyBP, rW, sc(state.topRedSupportHeight));
-            }
-
-            // Spacers
-            const spacerBeamXCenters = [];
-            if (currentLoadCalculationMode === 'point_load') {
-                let sStart = state.hasRearBeam ? activeBeams.find(b=>b.name==="Rear Transverse Beam").y : (isBackstopZero ? 0 : sy);
-                let sEnd = state.hasFrontBeam ? activeBeams.find(b=>b.name==="Front Transverse Beam").y + scGW : scPW;
-                ctx.fillStyle = 'orange';
-                let cX = scBW;
-                state.spacerConfig.forEach(spacing => {
-                    if (spacing > state.EPSILON) {
-                        cX += sc(spacing);
-                        ctx.fillRect(cX - sc(state.spacerBeamThickness) / 2, sStart, sc(state.spacerBeamThickness), sEnd - sStart);
-                        spacerBeamXCenters.push(cX);
-                    }
-                });
-                spacerBeamXCenters.forEach((x, i) => drawCircledText(`LS${i + 1}`, x, (sStart + sEnd) / 2, 'orange'));
-            }
-
-            // UDL & Point Loads
-            if (showAllDimensions && currentLoadCalculationMode === 'point_load') {
-                spacerBeamXCenters.forEach((sX, sIdx) => {
-                    activeBeams.forEach(beam => {
-                        const iY = beam.y + scGW / 2;
-                        ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(sX, iY, sc(25), 0, Math.PI * 2, true); ctx.fill();
-                        const pLoad = state.tributaryData[`Longitudinal Spacer ${sIdx + 1}, ${beam.name}`]?.pointLoad || 0;
-                        
-                        const fs = 40 * sf; ctx.font = `bold ${fs}px Inter, sans-serif`;
-                        const tw = ctx.measureText(`${pLoad.toFixed(2)} kN`).width, pad = 10 * sf;
-                        
-                        ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(sX + sc(40), iY - fs/2 - pad, tw + pad*2, fs + pad*2);
-                        ctx.fillStyle = 'white'; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(`${pLoad.toFixed(2)} kN`, sX + sc(40) + pad, iY - fs/2);
-                    });
-                });
-            } else if (currentLoadCalculationMode === 'udl') {
-                activeBeams.forEach(beam => {
-                    const udl = state.tributaryData[beam.name]?.udl || 0; if (udl < state.EPSILON) return;
-                    const drawS = Math.max(state.blueSupportWidth, state.steelSheetStartXOffset);
-                    const drawL = Math.min(state.overallLength - state.blueSupportWidth, state.steelSheetStartXOffset + state.steelSheetActualLength) - drawS;
-                    if (drawL > 0) {
-                        const bY = beam.y + scGW / 2;
-                        ctx.fillStyle = 'rgba(255,0,0,0.5)'; ctx.fillRect(sc(drawS), beam.y, sc(drawL), scGW);
-                        const text = `${udl.toFixed(4)} kN/m`, fs = 50 * sf;
-                        ctx.font = `bold ${fs}px Inter, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                        const tw = ctx.measureText(text).width, pad = 15 * sf, tx = scBW + (scPL - scBW * 2) / 2;
-                        ctx.fillStyle = 'green'; ctx.fillRect(tx - tw/2 - pad, bY - fs/2 - pad, tw + pad*2, fs + pad*2);
-                        ctx.fillStyle = 'white'; ctx.fillText(text, tx, bY);
-                        if (showAllDimensions) {
-                            ctx.fillStyle = 'black'; ctx.font = `bold ${50 * sf}px Inter, sans-serif`; ctx.textBaseline = 'top';
-                            ctx.fillText(`${drawL.toFixed(0)} mm`, sc(drawS) + sc(drawL)/2, beam.y + scGW + sc(30));
-                        }
-                    }
-                });
-            }
-
-            // Steel Sheet Dots
-            if (drawSteelSheetFlag) {
-                const drawDot = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2, true); ctx.fill(); };
-                ctx.fillStyle = 'red';
-                const sX = sc(state.steelSheetStartXOffset), eX = sX + sc(state.steelSheetActualLength), eY = sy + sc(state.steelSheetActualWidth);
-                [0,1].forEach(i => [0,1].forEach(j => drawDot(i?eX:sX, j?eY:sy, sc(15))));
-                for(let i=0; i<=40; i++) { drawDot(sX + i*(sc(state.steelSheetActualLength)/40), sy, sc(8)); drawDot(sX + i*(sc(state.steelSheetActualLength)/40), eY, sc(8)); }
-                for(let i=0; i<=20; i++) { drawDot(sX, sy + i*(sc(state.steelSheetActualWidth)/20), sc(8)); drawDot(eX, sy + i*(sc(state.steelSheetActualWidth)/20), sc(8)); }
-            }
-
-            // Dimensions
-            if (showAllDimensions) {
-                ctx.fillStyle = 'black';
-                const scaledFontSize = 60 * sf;
-                ctx.font = `bold ${scaledFontSize}px Inter, sans-serif`;
-
-                const bottomOffset = state.hasFrontBeam ? sc(state.frontBeamOffset) + scGW : 0;
-                const axisY = scPW + bottomOffset + sc(80);
-                const spacerDimY = axisY + sc(100);
-                const overallLengthDimY = spacerDimY + sc(100);
-
-                // Overall Length
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(`${state.overallLength} mm`, scPL / 2, overallLengthDimY);
-                ctx.strokeStyle = '#666'; ctx.lineWidth = 1.5;
-                ctx.beginPath(); ctx.moveTo(0, overallLengthDimY - sc(35)); ctx.lineTo(scPL, overallLengthDimY - sc(35)); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, overallLengthDimY - sc(50)); ctx.lineTo(0, overallLengthDimY - sc(20)); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(scPL, overallLengthDimY - sc(50)); ctx.lineTo(scPL, overallLengthDimY - sc(20)); ctx.stroke();
-
-                // Overall Width
-                const overallWidthDimX = -sc(240);
-                const overallWidthLineX = -sc(180);
-                ctx.save(); ctx.translate(overallWidthDimX, scPW / 2); ctx.rotate(-Math.PI / 2); 
-                ctx.fillText(`${state.overallWidth} mm`, 0, 0); 
-                ctx.restore();
-                ctx.beginPath(); ctx.moveTo(overallWidthLineX, 0); ctx.lineTo(overallWidthLineX, scPW); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(overallWidthLineX - sc(15), 0); ctx.lineTo(overallWidthLineX + sc(15), 0); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(overallWidthLineX - sc(15), scPW); ctx.lineTo(overallWidthLineX + sc(15), scPW); ctx.stroke();
-
-                // Axes
-                ctx.strokeStyle = 'gray'; ctx.lineWidth = 1.5; 
-                const coordFontSize = 40 * sf;
-                ctx.font = `${coordFontSize}px Inter, sans-serif`;
-
-                ctx.beginPath(); ctx.moveTo(0, axisY); ctx.lineTo(scPL, axisY); ctx.stroke(); 
-                ctx.fillText('X (mm)', scPL / 2, axisY + sc(40));
-                
-                const axisX = -sc(80);
-                const axisTextX = -sc(120);
-                ctx.beginPath(); ctx.moveTo(axisX, 0); ctx.lineTo(axisX, scPW); ctx.stroke();
-                ctx.save(); ctx.translate(axisTextX, scPW / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('Y (mm)', 0, 0); ctx.restore();
-                
-                // Coordinates
-                ctx.fillStyle = 'black'; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; 
-                ctx.fillText(`(0,0)`, sc(15), sc(15));
-                ctx.textAlign = 'right'; ctx.fillText(`(${state.overallLength},0)`, scPL - sc(15), sc(15));
-                ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillText(`(0,${state.overallWidth})`, sc(15), scPW - sc(15));
-                ctx.textAlign = 'right'; ctx.fillText(`(${state.overallLength},${state.overallWidth})`, scPL - sc(15), scPW - sc(15));
-
-                if (currentLoadCalculationMode === 'point_load') {
-                    ctx.font = `bold ${Math.max(10, 16 * sf * 2.2)}px Inter, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    let lastX = scBW;
-                    state.spacerConfig.forEach((spc) => {
-                        if (spc > state.EPSILON) {
-                            const cX = lastX + sc(spc);
-                            ctx.fillText(`${spc} mm`, lastX + sc(spc)/2, axisY + sc(80));
-                            ctx.strokeStyle = '#a0a0a0'; ctx.beginPath(); ctx.moveTo(lastX, axisY + sc(60)); ctx.lineTo(cX, axisY + sc(60)); ctx.stroke();
-                            ctx.beginPath(); ctx.moveTo(lastX, axisY + sc(50)); ctx.lineTo(lastX, axisY + sc(70)); ctx.moveTo(cX, axisY + sc(50)); ctx.lineTo(cX, axisY + sc(70)); ctx.stroke();
-                            lastX = cX;
-                        }
-                    });
-                }
-                if (drawSteelSheetFlag) {
-                    ctx.textBaseline = 'bottom'; ctx.fillText(`${state.steelSheetActualLength} mm`, sc(state.steelSheetStartXOffset) + sc(state.steelSheetActualLength) / 2, tyBP - sc(20));
-                    ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.save();
-                    ctx.translate(sc(state.steelSheetStartXOffset) - sc(60), sy + sc(state.steelSheetActualWidth) / 2); ctx.rotate(-Math.PI / 2);
-                    ctx.fillText(`${state.steelSheetActualWidth} mm`, 0, 0); ctx.restore();
-                }
-            }
-            ctx.restore(); 
+      const restraints = frame.restraints.slice();
+      const notes = [];
+      for (let d = 0; d < nDof; d++) {
+        if (restraints[d]) continue;
+        const rowNorm = K[d].reduce((sum, value) => sum + Math.abs(value), 0);
+        if (rowNorm < 1e-8) {
+          if (Math.abs(F[d]) > 1e-8) throw new Error("Unrestrained zero-stiffness DOF carries load: " + dofLabel(d) + ".");
+          restraints[d] = true;
+          notes.push("Auto locked isolated " + dofLabel(d) + ".");
         }
+      }
 
-        // --- CALCULATION ENGINE ---
-        function runCalculations() {
-            if (state.overallLength <= 0 || state.overallWidth <= 0) {
-                document.getElementById('validation-warning').classList.remove('hidden');
-                document.getElementById('main-content').classList.add('hidden');
-                return;
-            }
-            document.getElementById('validation-warning').classList.add('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
+      const free = [];
+      const fixed = [];
+      restraints.forEach((isFixed, i) => (isFixed ? fixed : free).push(i));
+      if (free.length === 0) throw new Error("All degrees of freedom are restrained.");
 
-            const isBackstopZero = state.gapFromFirstGreenBeamToBackPost === 0;
-            let sy_mm = isBackstopZero ? 0 : state.redSquareSize - state.gapFromFirstGreenBeamToBackPost;
-            const spanM = state.overallLength - state.blueSupportWidth;
+      const Kff = pickMatrix(K, free, free);
+      const Ff = pickVector(F, free);
+      const uf = gaussSolve(Kff, Ff);
+      const U = Array(nDof).fill(0);
+      free.forEach((d, i) => U[d] = uf[i]);
+      const frameSpan = Math.max(frame.input.columnHeight, frame.input.armLength, 1);
+      const maxTranslation = Math.max(...U.filter((_, i) => i % 3 !== 2).map(Math.abs), 0);
+      if (maxTranslation > frameSpan * 5) {
+        throw new Error("The selected support/release arrangement is a near mechanism. Add base fixity, bracing, or rotational restraint before using deflection and force results.");
+      }
+      if (maxTranslation > frameSpan / 20) {
+        notes.push("Large displacement warning: small-displacement frame theory may not be valid.");
+      }
 
-            let sy_g = isBackstopZero ? state.greenSheetWidth / 2 : state.redSquareSize + state.greenSheetWidth / 2;
-            let ey_g = isBackstopZero ? state.overallWidth - state.greenSheetWidth / 2 : state.overallWidth - state.redSquareSize - state.greenSheetWidth / 2;
+      const KU = matVec(K, U);
+      const R = KU.map((value, i) => value - F[i]);
 
-            let baseBeams = [];
-            if (state.beamConfiguration === 'two-beams') baseBeams = [{ name: 'Transverse Beam 1', y: sy_g }, { name: 'Transverse Beam 2', y: ey_g }];
-            else if (state.beamConfiguration === 'three-beams') baseBeams = [{ name: 'Transverse Beam 1', y: sy_g }, { name: 'Transverse Beam 2', y: (sy_g + ey_g) / 2 }, { name: 'Transverse Beam 3', y: ey_g }];
-            else baseBeams = [{ name: 'Transverse Beam 1', y: sy_g }, { name: 'Transverse Beam 2', y: sy_g + (ey_g - sy_g) / 3 }, { name: 'Transverse Beam 3', y: sy_g + 2 * (ey_g - sy_g) / 3 }, { name: 'Transverse Beam 4', y: ey_g }];
+      const elements = prepared.map((el) => {
+        const dGlobal = pickVector(U, el.map);
+        const dLocal = matVec(el.T, dGlobal);
+        const dLocalReleased = expandLocalDisplacements(el.condensed, dLocal);
+        const endForces = subVector(matVec(el.kLocal, dLocalReleased), el.fLocal);
+        return { ...el, dGlobal, dLocal: dLocalReleased, endForces };
+      });
 
-            let activeBeams = [...baseBeams];
-            if (state.hasRearBeam) activeBeams.unshift({ name: 'Rear Transverse Beam', y: -state.rearBeamOffset + state.greenSheetWidth / 2 });
-            if (state.hasFrontBeam) activeBeams.push({ name: 'Front Transverse Beam', y: state.overallWidth + state.frontBeamOffset - state.greenSheetWidth / 2 });
-            activeBeams.sort((a, b) => a.y - b.y);
+      const result = { ...frame, K, F, U, R, restraints, elements, notes };
+      result.summary = summarize(result);
+      result.frame3dd = makeFrame3DD(result);
+      return result;
+    }
 
-            const ssX = state.steelSheetStartXOffset, seX = ssX + state.steelSheetActualLength, seY = sy_mm + state.steelSheetActualWidth;
+    function dofLabel(globalDof) {
+      const node = Math.floor(globalDof / 3) + 1;
+      const dof = DOF[globalDof % 3];
+      return "N" + node + " " + dof;
+    }
 
-            let curTribData = {}, totArea = 0, totLoad = 0, restingSum = 0;
-            const selSpacer = ALL_PROFILES.find(p => p.name === state.selectedSpacerProfileName);
-                            
-            if (state.loadCalculationMode === 'point_load') {
-                const uX_mm = []; let cPos = state.blueSupportWidth;
-                for (const spc of state.spacerConfig) { if (spc <= 0) break; cPos += spc; uX_mm.push(cPos); }
-                                    
-                const rawTrib = {}, rawBLoads = {}; activeBeams.forEach(b => rawBLoads[b.name] = []);
-                let sBY = state.hasRearBeam ? -state.rearBeamOffset : sy_mm;
-                let eBY = state.hasFrontBeam ? state.overallWidth + state.frontBeamOffset : state.overallWidth;
-
-                uX_mm.forEach((cX, sIdx) => {
-                    activeBeams.forEach((beam, gIdx) => {
-                        const key = `Longitudinal Spacer ${sIdx + 1}, ${beam.name}`;
-                        let xl = sIdx === 0 ? -Infinity : (uX_mm[sIdx - 1] + cX) / 2;
-                        let xr = sIdx === uX_mm.length - 1 ? Infinity : (cX + uX_mm[sIdx + 1]) / 2;
-                        let y_t = gIdx === 0 ? -Infinity : (activeBeams[gIdx - 1].y + beam.y) / 2;
-                        let y_b = gIdx === activeBeams.length - 1 ? Infinity : (beam.y + activeBeams[gIdx + 1].y) / 2;
-
-                        const area = Math.max(0, Math.min(xr, seX) - Math.max(xl, ssX)) * Math.max(0, Math.min(y_b, seY) - Math.max(y_t, sy_mm));
-                        const sheet_kN = (area * state.steelThickness * state.unitWeightOfSteel) / 1e9;
-                        
-                        let st_y = gIdx === 0 ? sBY : (activeBeams[gIdx - 1].y + beam.y) / 2;
-                        let sb_y = gIdx === activeBeams.length - 1 ? eBY : (beam.y + activeBeams[gIdx + 1].y) / 2;
-                        const spacer_kN = selSpacer?.massPerMeter ? (Math.max(0, sb_y - st_y) / 1000) * (selSpacer.massPerMeter * 0.00981) : 0;
-
-                        rawTrib[key] = { area, sheetPointLoad: sheet_kN, spacerPointLoad: spacer_kN };
-                        totArea += area; totLoad += (sheet_kN + spacer_kN);
-                        rawBLoads[beam.name].push({ x_global_mm: cX, x_relative: cX - state.blueSupportWidth, sheet_load: sheet_kN, spacer_load: spacer_kN, load: sheet_kN + spacer_kN, key });
-                    });
-                });
-
-                const redisBLoads = {}, finTrib = {};
-                activeBeams.forEach(beam => { redisBLoads[beam.name] = []; });
-
-                activeBeams.forEach(beam => {
-                    const bName = beam.name, curBLoads = rawBLoads[bName].map(l => ({ x: l.x_relative, sheet_load: l.sheet_load, spacer_load: l.spacer_load, load: l.load, key: l.key }));
-                    const touching = [];
-                    curBLoads.forEach((pt, idx) => {
-                        const raw = rawBLoads[bName][idx];
-                        if (ssX < raw.x_global_mm + state.spacerBeamThickness/2 - state.EPSILON && seX > raw.x_global_mm - state.spacerBeamThickness/2 + state.EPSILON) touching.push(idx);
-                    });
-
-                    if (touching.length > 0) {
-                        curBLoads.forEach((pt, sIdx) => {
-                            if (!touching.includes(sIdx) && pt.sheet_load > state.EPSILON) {
-                                let near = touching[0], minDist = Math.abs(rawBLoads[bName][sIdx].x_global_mm - rawBLoads[bName][near].x_global_mm);
-                                for (let i=1; i<touching.length; i++) {
-                                    const dist = Math.abs(rawBLoads[bName][sIdx].x_global_mm - rawBLoads[bName][touching[i]].x_global_mm);
-                                    if (dist < minDist) { minDist = dist; near = touching[i]; }
-                                }
-                                curBLoads[near].sheet_load += pt.sheet_load; pt.sheet_load = 0;
-                            }
-                        });
-                    } else {
-                        let totUnassigned = 0;
-                        curBLoads.forEach(pt => { totUnassigned += pt.sheet_load; pt.sheet_load = 0; });
-                        if (curBLoads.length > 0) curBLoads[0].sheet_load += totUnassigned;
-                    }
-
-                    curBLoads.forEach(pt => {
-                        pt.load = pt.sheet_load + pt.spacer_load;
-                        finTrib[pt.key] = { area: rawTrib[pt.key].area, sheetPointLoad: pt.sheet_load, spacerPointLoad: pt.spacer_load, pointLoad: pt.load };
-                        redisBLoads[bName].push({ x: pt.x, load: pt.load, sheet_load: pt.sheet_load, spacer_load: pt.spacer_load, key: pt.key });
-                        if (pt.sheet_load > state.EPSILON) restingSum += pt.sheet_load;
-                    });
-                });
-                                    
-                curTribData = finTrib;
-                const newAllData = Object.entries(redisBLoads).map(([n, loads]) => ({ name: n, loads, udl: null, span: spanM }));
-                state.allBeamsLoadData = newAllData;
-
-                let maxM = -1, critB = '';
-                Object.entries(redisBLoads).forEach(([n, loads]) => {
-                    const { maxMoment } = calculateBeamForces(state.supportCondition, spanM, loads.map(l => ({ ...l, x: l.x + state.blueSupportWidth/2 })), null, 0);
-                    if (maxMoment > maxM) { maxM = maxMoment; critB = n; }
-                });
-                state.beamAnalysisData = { criticalBeamName: critB, maxLoad: 0, criticalBeamLoads: [], criticalBeamSpan: spanM, mode: 'point_load' };
-            } else { 
-                const initUdl = {}, allBWEdges = activeBeams.map(b => ({ ...b, topEdge: b.y - state.greenSheetWidth/2, bottomEdge: b.y + state.greenSheetWidth/2 }));
-                const contBeams = allBWEdges.filter(b => seY > b.topEdge && sy_mm < b.bottomEdge);
-
-                activeBeams.forEach((beam) => {
-                    let tW_mm = 0;
-                    if (contBeams.some(cb => cb.name === beam.name)) {
-                        const cIdx = contBeams.findIndex(cb => cb.name === beam.name);
-                        const yt = cIdx === 0 ? -Infinity : (contBeams[cIdx - 1].y + beam.y) / 2;
-                        const yb = cIdx === contBeams.length - 1 ? Infinity : (beam.y + contBeams[cIdx + 1].y) / 2;
-                        tW_mm = Math.max(0, Math.min(yb, seY) - Math.max(yt, sy_mm));
-                    }
-                    const uLen = Math.max(0, Math.min(seX, state.overallLength - state.blueSupportWidth) - Math.max(ssX, state.blueSupportWidth));
-                    const tArea = tW_mm * uLen, tLoad = (tArea * state.steelThickness * state.unitWeightOfSteel) / 1e9;
-                    initUdl[beam.name] = { area: tArea, totalLoad: tLoad, udl: uLen > state.EPSILON ? (tLoad / uLen) * 1000 : 0, startX: Math.max(ssX, state.blueSupportWidth) - state.blueSupportWidth/2, length: uLen };
-                });
-
-                curTribData = initUdl;
-                state.allBeamsLoadData = Object.entries(initUdl).map(([name, udl]) => ({ name, loads: [], udl, span: spanM }));
-                let maxM = -1, critB = '';
-                Object.entries(initUdl).forEach(([name, udl]) => {
-                    const { maxMoment } = calculateBeamForces(state.supportCondition, spanM, [], udl, 0);
-                    if(maxMoment > maxM) { maxM = maxMoment; critB = name; }
-                });
-                state.beamAnalysisData = { criticalBeamName: critB, maxLoad: 0, criticalBeamLoads: [], criticalBeamUDL: null, criticalBeamSpan: spanM, mode: 'udl' };
-            }
-
-            state.tributaryData = curTribData;
-            state.totalTributaryArea = Object.values(curTribData).reduce((s, d) => s + (d.area || 0), 0);
-            state.totalPointLoad = Object.values(curTribData).reduce((s, d) => s + (d.pointLoad || d.totalLoad || 0), 0);
-            state.sumOfRestingPointLoads = restingSum;
-            state.calculatedTotalSheetLoad = ((state.steelSheetActualLength * state.steelSheetActualWidth * state.steelThickness) / 1e9) * state.unitWeightOfSteel;
-
-            // Advanced Analysis Calculation
-            performBeamAnalysis();
-            updateUI();
+    function summarize(result) {
+      let maxSway = 0;
+      let maxTip = 0;
+      let maxV = 0;
+      let maxM = 0;
+      result.nodes.forEach((node) => {
+        if (node.x === 0) maxSway = Math.max(maxSway, Math.abs(result.U[dofIndex(node.id, 0)]));
+        if (node.x > 0) maxTip = Math.max(maxTip, Math.abs(result.U[dofIndex(node.id, 1)]));
+      });
+      result.elements.forEach((el) => {
+        for (let i = 0; i <= 40; i++) {
+          const x = el.L * i / 40;
+          const v = diagramValue(el, x);
+          maxV = Math.max(maxV, Math.abs(v.V));
+          maxM = Math.max(maxM, Math.abs(v.M));
         }
+      });
+      return { maxSway, maxTip, maxV, maxM };
+    }
 
-        function performBeamAnalysis() {
-            const selectedProfile = ALL_PROFILES.find(p => p.name === state.selectedProfileName);
-            if (!state.allBeamsLoadData || state.allBeamsLoadData.length === 0) return;
-            
-            let criticalBeam = null, maxFactoredMoment = -1;
-            const allResults = [];
+    function diagramValue(el, x) {
+      const p = el.endForces;
+      const q = el.qLocalY || 0;
+      const N = p[0];
+      const V = p[1] + q * x;
+      const M = p[2] - p[1] * x - 0.5 * q * x * x;
+      return { N, V, M };
+    }
 
-            state.allBeamsLoadData.forEach(beamData => {
-                const span = beamData.span;
-                const basePointLoads = beamData.loads ? beamData.loads.map(l => ({ ...l, x: l.x + (state.blueSupportWidth / 2) })) : [];
-                const baseUdlData = beamData.udl;
-                const baseSelfWeight = (selectedProfile && selectedProfile.massPerMeter > state.EPSILON) ? (selectedProfile.massPerMeter * 9.81) / 1000 : 0;
+    function render(result) {
+      lastResult = result;
+      $("errorBox").style.display = "none";
+      $("mSway").textContent = fmt(result.summary.maxSway) + " mm";
+      $("mTip").textContent = fmt(result.summary.maxTip) + " mm";
+      $("mShear").textContent = fmt(result.summary.maxV) + " N";
+      $("mMoment").textContent = fmt(result.summary.maxM) + " N.mm";
+      $("mStatus").textContent = result.notes.length ? "OK +" + result.notes.length : "OK";
+      renderModelSvg(result);
+      renderTables(result);
+      renderMemberSelect(result);
+      renderDiagram(result);
+      $("frame3ddText").value = result.frame3dd;
+    }
 
-                const pointLoadsDL = basePointLoads.map(l => ({ ...l, load: l.spacer_load || 0 }));
-                const pointLoadsLL = basePointLoads.map(l => ({ ...l, load: l.sheet_load || 0 }));
+    function renderModelSvg(result) {
+      const svg = $("modelSvg");
+      svg.replaceChildren();
+      const xs = result.nodes.map((n) => n.x);
+      const ys = result.nodes.map((n) => n.y);
+      const minX = Math.min(...xs) - result.input.armLength * 0.12;
+      const maxX = Math.max(...xs) + result.input.armLength * 0.14;
+      const minY = Math.min(...ys) - result.input.columnHeight * 0.18;
+      const maxY = Math.max(...ys) + result.input.columnHeight * 0.12;
+      const W = 1000;
+      const H = 620;
+      const margin = 54;
+      const sx = (x) => margin + (x - minX) / (maxX - minX || 1) * (W - 2 * margin);
+      const sy = (y) => H - margin - (y - minY) / (maxY - minY || 1) * (H - 2 * margin);
 
-                const serviceForces = calculateBeamForces(state.supportCondition, span, basePointLoads, baseUdlData, baseSelfWeight);
-                
-                const factoredPointLoads = basePointLoads.map(l => ({ ...l, load: ((l.spacer_load || 0) * state.deadLoadFactor) + ((l.sheet_load || 0) * state.liveLoadFactor) }));
-                const factoredUdlData = baseUdlData ? { ...baseUdlData, udl: baseUdlData.udl * state.liveLoadFactor } : null;
-                const factoredSelfWeight = baseSelfWeight * state.deadLoadFactor;
-                const factoredForces = calculateBeamForces(state.supportCondition, span, factoredPointLoads, factoredUdlData, factoredSelfWeight);
+      const maxDisp = Math.max(...result.U.map(Math.abs), 0);
+      const autoScale = maxDisp > 0 ? Math.min(900, (Math.max(maxX - minX, maxY - minY) * 0.08) / maxDisp) : 1;
+      const scale = result.input.defScale > 0 ? result.input.defScale : autoScale;
+      $("scaleLabel").textContent = "Deflection scale: " + fmt(scale, 1) + "x";
 
-                const serviceDL = calculateBeamForces(state.supportCondition, span, pointLoadsDL, null, baseSelfWeight);
-                const serviceLL = calculateBeamForces(state.supportCondition, span, pointLoadsLL, baseUdlData, 0);
-                const factoredDL = calculateBeamForces(state.supportCondition, span, pointLoadsDL.map(l => ({...l, load: l.load * state.deadLoadFactor})), null, factoredSelfWeight);
-                const factoredLL = calculateBeamForces(state.supportCondition, span, pointLoadsLL.map(l => ({...l, load: l.load * state.liveLoadFactor})), factoredUdlData, 0);
+      drawGrid(svg, sx, sy, minX, maxX, minY, maxY);
+      result.elements.forEach((el) => {
+        const ni = result.nodes[el.i - 1];
+        const nj = result.nodes[el.j - 1];
+        line(svg, sx(ni.x), sy(ni.y), sx(nj.x), sy(nj.y), "#111827", 4, 1);
+        if (el.releases.rzI) hinge(svg, sx(ni.x), sy(ni.y));
+        if (el.releases.rzJ) hinge(svg, sx(nj.x), sy(nj.y));
+      });
 
-                const result = {
-                    name: beamData.name, serviceReactions: { RA: serviceForces.RA, RB: serviceForces.RB },
-                    factoredReactions: { RA: factoredForces.RA, RB: factoredForces.RB },
-                    maxMoment: factoredForces.maxMoment, maxShear: factoredForces.maxShear,
-                    deflectionLoads: { pointLoads: basePointLoads, udlData: baseUdlData, selfWeight: baseSelfWeight },
-                    breakdown: { serviceDL, serviceLL, factoredDL, factoredLL }
-                };
+      result.elements.forEach((el) => {
+        const ni = result.nodes[el.i - 1];
+        const nj = result.nodes[el.j - 1];
+        const ui = { x: result.U[dofIndex(ni.id, 0)], y: result.U[dofIndex(ni.id, 1)] };
+        const uj = { x: result.U[dofIndex(nj.id, 0)], y: result.U[dofIndex(nj.id, 1)] };
+        line(svg, sx(ni.x + ui.x * scale), sy(ni.y + ui.y * scale), sx(nj.x + uj.x * scale), sy(nj.y + uj.y * scale), "#1f6feb", 3, 0.85);
+      });
 
-                allResults.push(result);
-                if (factoredForces.maxMoment > maxFactoredMoment) {
-                    maxFactoredMoment = factoredForces.maxMoment; criticalBeam = result;
-                }
-            });
+      result.nodes.forEach((node) => circle(svg, sx(node.x), sy(node.y), 4, "#ffffff", "#111827"));
+      result.input.armHeights.forEach((y) => {
+        const nodeId = result.tipNodeAt.get(y);
+        const node = result.nodes[nodeId - 1];
+        const p = result.input.pointByHeight.get(y) || 0;
+        if (p > 0) arrow(svg, sx(node.x), sy(node.y + result.input.columnHeight * 0.08), sx(node.x), sy(node.y), varColor("red"), fmt(p, 0));
+      });
+      drawSupports(svg, result, sx, sy);
+    }
 
-            let maxThickness = 0, limitingFactor = '';
-            const t_current = Number(state.steelThickness);
+    function drawGrid(svg, sx, sy, minX, maxX, minY, maxY) {
+      const lines = 5;
+      for (let i = 0; i <= lines; i++) {
+        const x = minX + (maxX - minX) * i / lines;
+        line(svg, sx(x), sy(minY), sx(x), sy(maxY), "#eef2f6", 1, 1);
+        const y = minY + (maxY - minY) * i / lines;
+        line(svg, sx(minX), sy(y), sx(maxX), sy(y), "#eef2f6", 1, 1);
+      }
+    }
 
-            if (selectedProfile && selectedProfile.name !== 'Select Profile' && t_current > 0) {
-                const plasticMomentResistance = (selectedProfile.Wpl_y * state.fy) / 1000;
-                const E_MPa = 210000, I_cm4 = selectedProfile.Iy || 0;
+    function drawSupports(svg, result, sx, sy) {
+      const base = result.nodes[result.colNodeAt.get(0) - 1];
+      supportSymbol(svg, sx(base.x), sy(base.y), result.input.leftSupport);
+      const right = result.nodes[result.tipNodeAt.get(0) - 1];
+      supportSymbol(svg, sx(right.x), sy(right.y), result.input.rightSupport);
+    }
 
-                const checkCapacity = (testThickness) => {
-                    const tRatio = testThickness / t_current;
-                    for (const beamData of state.allBeamsLoadData) {
-                        const span = beamData.span;
-                        const basePointLoads = beamData.loads ? beamData.loads.map(l => ({ ...l, x: l.x + (state.blueSupportWidth / 2) })) : [];
-                        const baseUdlData = beamData.udl;
-                        const baseSelfWeight = (selectedProfile.massPerMeter > state.EPSILON) ? (selectedProfile.massPerMeter * 9.81) / 1000 : 0;
+    function supportSymbol(svg, x, y, type) {
+      if (type === "free") return;
+      const color = type === "fixed" ? "#047a72" : "#b4233c";
+      if (type === "fixed") {
+        rect(svg, x - 18, y + 5, 36, 8, color);
+        for (let i = -15; i <= 15; i += 10) line(svg, x + i, y + 13, x + i - 8, y + 24, color, 2, 1);
+        return;
+      }
+      const d = `M ${x} ${y + 4} L ${x - 20} ${y + 42} L ${x + 20} ${y + 42} Z`;
+      path(svg, d, "none", color, 3, 1);
+      if (type === "roller-y") {
+        circle(svg, x - 10, y + 48, 4, "none", color);
+        circle(svg, x + 10, y + 48, 4, "none", color);
+      }
+    }
 
-                        const testPointLoadsService = basePointLoads.map(l => ({ ...l, load: (l.spacer_load || 0) + ((l.sheet_load || 0) * tRatio) }));
-                        const testUdlData = baseUdlData ? { ...baseUdlData, udl: baseUdlData.udl * tRatio } : null;
+    function renderTables(result) {
+      const dispRows = result.nodes.map((node) => ({
+        node: node.id + " " + node.label,
+        x: node.x,
+        y: node.y,
+        Ux: result.U[dofIndex(node.id, 0)],
+        Uy: result.U[dofIndex(node.id, 1)],
+        Rz: result.U[dofIndex(node.id, 2)]
+      }));
+      table($("dispTable"), ["node", "x", "y", "Ux", "Uy", "Rz"], dispRows);
 
-                        const factoredPointLoads = basePointLoads.map(l => ({ ...l, load: ((l.spacer_load || 0) * state.deadLoadFactor) + ((l.sheet_load || 0) * tRatio * state.liveLoadFactor) }));
-                        const factoredUdlData = testUdlData ? { ...testUdlData, udl: testUdlData.udl * state.liveLoadFactor } : null;
-                        const factoredSelfWeight = baseSelfWeight * state.deadLoadFactor;
+      const reactRows = [];
+      result.restraints.forEach((fixed, d) => {
+        if (!fixed) return;
+        const node = Math.floor(d / 3) + 1;
+        reactRows.push({ dof: "N" + node + " " + DOF[d % 3], reaction: result.R[d] });
+      });
+      table($("reactTable"), ["dof", "reaction"], reactRows);
 
-                        const factoredForces = calculateBeamForces(state.supportCondition, span, factoredPointLoads, factoredUdlData, factoredSelfWeight);
-                        if (factoredForces.maxMoment > plasticMomentResistance) return { passed: false, limit: 'Moment Capacity' };
+      const forceRows = result.elements.map((el) => ({
+        member: el.id + " " + el.name,
+        Ni: el.endForces[0],
+        Vi: el.endForces[1],
+        Mi: el.endForces[2],
+        Nj: el.endForces[3],
+        Vj: el.endForces[4],
+        Mj: el.endForces[5]
+      }));
+      table($("forceTable"), ["member", "Ni", "Vi", "Mi", "Nj", "Vj", "Mj"], forceRows);
+    }
 
-                        const defl = calculateBeamDeflection(state.supportCondition, span, testPointLoadsService, testUdlData, baseSelfWeight, E_MPa, I_cm4);
-                        if (Math.abs(defl) > span / 200) return { passed: false, limit: 'Deflection Limit (L/200)' };
-                    }
-                    return { passed: true };
-                };
+    function table(container, columns, rows) {
+      const tbl = document.createElement("table");
+      const thead = document.createElement("thead");
+      const trh = document.createElement("tr");
+      columns.forEach((c) => {
+        const th = document.createElement("th");
+        th.textContent = c;
+        trh.appendChild(th);
+      });
+      thead.appendChild(trh);
+      tbl.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        columns.forEach((c) => {
+          const td = document.createElement("td");
+          td.textContent = typeof row[c] === "number" ? fmt(row[c], c === "Rz" ? 7 : 4) : row[c];
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      tbl.appendChild(tbody);
+      container.replaceChildren(tbl);
+    }
 
-                let low = 0, high = 1000;
-                if (!checkCapacity(0).passed) {
-                    maxThickness = 0; limitingFactor = checkCapacity(0).limit + ' (Fails under self-weight)';
-                } else {
-                    while (checkCapacity(high).passed && high < 100000) { low = high; high *= 2; }
-                    for (let i = 0; i < 40; i++) {
-                        const mid = (low + high) / 2;
-                        const res = checkCapacity(mid);
-                        if (res.passed) { maxThickness = mid; low = mid; } 
-                        else { limitingFactor = res.limit; high = mid; }
-                    }
-                }
-            } else if (t_current <= 0) limitingFactor = 'Current thickness must be > 0';
+    function renderMemberSelect(result) {
+      const select = $("memberSelect");
+      const existing = select.value;
+      select.replaceChildren();
+      result.elements.forEach((el) => {
+        const option = document.createElement("option");
+        option.value = String(el.id);
+        option.textContent = el.id + " - " + el.name;
+        select.appendChild(option);
+      });
+      if ([...select.options].some((o) => o.value === existing)) select.value = existing;
+    }
 
-            state.analysis = { allResults, criticalBeam, maxThickness, limitingFactor };
-        }
+    function renderDiagram(result) {
+      const svg = $("diagramSvg");
+      svg.replaceChildren();
+      const id = Number($("memberSelect").value || result.elements[0].id);
+      const el = result.elements.find((m) => m.id === id) || result.elements[0];
+      $("diagramInfo").textContent = el.name + ", L=" + fmt(el.L, 1) + " mm";
+      const samples = [];
+      for (let i = 0; i <= 80; i++) {
+        const x = el.L * i / 80;
+        samples.push({ x, ...diagramValue(el, x) });
+      }
+      drawDiagramPanel(svg, samples, "V", 40, 42, 920, 230, "#047a72", "Shear V (N)");
+      drawDiagramPanel(svg, samples, "M", 40, 340, 920, 230, "#b4233c", "Bending M (N.mm)");
+    }
 
-        // --- DOM MANIPULATION & UI RENDERING ---
+    function drawDiagramPanel(svg, samples, key, x0, y0, w, h, color, title) {
+      const maxAbs = Math.max(...samples.map((s) => Math.abs(s[key])), 1);
+      const maxX = Math.max(...samples.map((s) => s.x), 1);
+      const sx = (x) => x0 + x / maxX * w;
+      const sy = (v) => y0 + h / 2 - v / maxAbs * h * 0.43;
+      rect(svg, x0, y0, w, h, "#ffffff", "#d5dde7");
+      line(svg, x0, y0 + h / 2, x0 + w, y0 + h / 2, "#9aa8b8", 1, 1);
+      const points = samples.map((s) => sx(s.x) + "," + sy(s[key])).join(" ");
+      polyline(svg, points, color, 3);
+      text(svg, x0 + 8, y0 + 20, title, "#253445", 14, "start");
+      text(svg, x0 + w - 8, y0 + 20, "max abs " + fmt(maxAbs), color, 13, "end");
+    }
 
-        function bindInputs() {
-            // General Inputs
-            const keys = ['overallLength', 'overallWidth', 'blueSupportWidth', 'greenSheetWidth', 'redSquareSize', 'topRedSupportWidth', 'topRedSupportHeight', 'spacerBeamThickness', 'gapFromFirstGreenBeamToBackPost', 'steelSheetStartXOffset', 'steelSheetActualLength', 'steelSheetActualWidth', 'steelThickness', 'unitWeightOfSteel', 'fy', 'deadLoadFactor', 'liveLoadFactor', 'rearBeamOffset', 'frontBeamOffset'];
-            
-            keys.forEach(k => {
-                const el = document.getElementById('in-' + k);
-                if(el) {
-                    el.value = state[k];
-                    el.addEventListener('input', (e) => { state[k] = Number(e.target.value); runCalculations(); });
-                }
-            });
+    function makeFrame3DD(result) {
+      const E = result.input.E;
+      const nu = 0.3;
+      const G = E / (2 * (1 + nu));
+      const lines = [];
+      lines.push("RackFrame2D export: 2D rack model in X-Y plane, units N and mm");
+      lines.push("# Generated by RackFrame2D. Source solver: direct stiffness; format follows pslack/frame3dd examples.");
+      lines.push("# Arm section: " + result.input.armSection);
+      lines.push("# Column section: " + result.input.columnSection);
+      lines.push("# Member end releases are not native in Frame3DD input. Released members are flagged below.");
+      lines.push("");
+      lines.push(result.nodes.length + " # number of nodes");
+      lines.push("#.node x y z r");
+      result.nodes.forEach((n) => lines.push(`${n.id} ${n.x} ${n.y} 0 0`));
+      lines.push("");
+      lines.push(result.nodes.length + " # number of nodes with reactions");
+      lines.push("#.n x y z xx yy zz 1=fixed, 0=free");
+      result.nodes.forEach((n) => {
+        const rx = result.restraints[dofIndex(n.id, 0)] ? 1 : 0;
+        const ry = result.restraints[dofIndex(n.id, 1)] ? 1 : 0;
+        const rzz = result.restraints[dofIndex(n.id, 2)] ? 1 : 0;
+        lines.push(`${n.id} ${rx} ${ry} 1 1 1 ${rzz}`);
+      });
+      lines.push("");
+      lines.push(result.elements.length + " # number of frame elements");
+      lines.push("#e n1 n2 Ax Asy Asz Jxx Iyy Izz E G roll density");
+      result.elements.forEach((el) => {
+        const releaseNote = (el.releases.rzI || el.releases.rzJ) ? " # RELEASED IN RackFrame2D" : "";
+        const J = Math.max(el.I * 2, 1e-9);
+        lines.push(`${el.id} ${el.i} ${el.j} ${el.A} ${el.A} ${el.A} ${J} ${el.I} ${el.I} ${E} ${G} 0 0${releaseNote}`);
+      });
+      lines.push("");
+      lines.push("0 # 1: include shear deformation");
+      lines.push("0 # 1: include geometric stiffness");
+      lines.push("40 # exaggerate mesh deformations");
+      lines.push("1 # zoom scale for 3D plotting");
+      lines.push(Math.max(result.input.armLength / 20, 25).toFixed(6) + " # x-axis increment for internal forces");
+      lines.push("");
+      lines.push("1 # number of static load cases");
+      lines.push("# Begin Static Load Case 1 of 1");
+      lines.push("0 0 0 # gravitational acceleration for self-weight loading");
 
-            // Specific element (sheetT2) bound to steelThickness
-            const st2 = document.getElementById('in-sheetT2');
-            st2.value = state.steelThickness;
-            st2.addEventListener('input', e => { 
-                state.steelThickness = Number(e.target.value); 
-                document.getElementById('in-steelThickness').value = state.steelThickness;
-                runCalculations(); 
-            });
+      const nodal = new Map();
+      function addNodeLoad(node, fx, fy, mzz) {
+        const prev = nodal.get(node) || { fx: 0, fy: 0, mzz: 0 };
+        prev.fx += fx;
+        prev.fy += fy;
+        prev.mzz += mzz;
+        nodal.set(node, prev);
+      }
+      result.input.armHeights.forEach((y) => {
+        const node = result.tipNodeAt.get(y);
+        const P = result.input.pointByHeight.get(y) || 0;
+        if (P) addNodeLoad(node, 0, -P, 0);
+      });
+      result.elements.forEach((el) => {
+        if (!el.qLocalY) return;
+        const f = uniformEquivalent(el.qLocalY, el.L);
+        addNodeLoad(el.i, 0, f[1], f[2]);
+        addNodeLoad(el.j, 0, f[4], f[5]);
+      });
+      const loaded = [...nodal.entries()].filter(([, v]) => Math.abs(v.fx) + Math.abs(v.fy) + Math.abs(v.mzz) > 1e-9);
+      lines.push(loaded.length + " # number of loaded nodes");
+      lines.push("#.n Fx Fy Fz Mxx Myy Mzz");
+      loaded.forEach(([node, v]) => lines.push(`${node} ${v.fx} ${v.fy} 0 0 0 ${v.mzz}`));
+      lines.push("0 # number of uniform loads");
+      lines.push("0 # number of trapezoidal loads");
+      lines.push("0 # number of internal concentrated loads");
+      lines.push("0 # number of temperature loads");
+      lines.push("0 # number of nodes with prescribed displacements");
+      lines.push("# End Static Load Case 1 of 1");
+      lines.push("0 # number of dynamic modes");
+      lines.push("# End of input data file");
+      return lines.join("\n");
+    }
 
-            // Checkboxes
-            const cbKeys = ['showSteelSheet', 'hasRearBeam', 'hasFrontBeam'];
-            cbKeys.forEach(k => {
-                const el = document.getElementById('in-' + k);
-                if(el) {
-                    el.checked = state[k];
-                    el.addEventListener('change', (e) => { state[k] = e.target.checked; runCalculations(); });
-                }
-            });
+    function downloadText(filename, text) {
+      const blob = new Blob([text], { type: "text/plain" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    }
 
-            // Selects
-            const selProf = document.getElementById('in-selectedProfile');
-            const selSpacer = document.getElementById('in-selectedSpacerProfile');
-            ALL_PROFILES.forEach(p => {
-                let o1 = document.createElement('option'); o1.value = p.name; o1.text = p.name + (p.Wpl_y ? ` (Wpl,y: ${p.Wpl_y} cm³)` : '');
-                let o2 = document.createElement('option'); o2.value = p.name; o2.text = p.name.replace('SHS ', '');
-                selProf.appendChild(o1); selSpacer.appendChild(o2);
-            });
-            selProf.value = state.selectedProfileName;
-            selSpacer.value = state.selectedSpacerProfileName;
-            
-            selProf.addEventListener('change', e => { state.selectedProfileName = e.target.value; runCalculations(); });
-            selSpacer.addEventListener('change', e => { state.selectedSpacerProfileName = e.target.value; runCalculations(); });
+    function run() {
+      try {
+        const input = readModel();
+        const frame = buildFrame(input);
+        const result = analyze(frame);
+        render(result);
+      } catch (err) {
+        $("errorBox").textContent = err.message;
+        $("errorBox").style.display = "block";
+        $("mStatus").textContent = "Check input";
+      }
+    }
 
-            renderRadioGroups();
-            renderSpacers();
-        }
+    function resetDefaults() {
+      $("columnHeight").value = 3600;
+      $("armLength").value = 2400;
+      $("armHeights").value = "0, 1500, 3000";
+      $("tipLoads").value = "0, 8000, 8000";
+      $("udlLoads").value = "0, 0, 0";
+      if (sectionCatalog()) {
+        $("armFamily").value = "PFC";
+        populateSectionSelect("arm", "PFC|180x75x20");
+        $("armAxis").value = "major";
+        $("columnFamily").value = "SHS";
+        populateSectionSelect("column", "SHS|150 x 150 x 6.3");
+        $("columnAxis").value = "major";
+        updateSectionInputs();
+      }
+      $("E").value = 210000;
+      if (!sectionCatalog()) {
+        $("A").value = 2400;
+        $("I").value = 18000000;
+      }
+      $("colAMult").value = 1;
+      $("colIMult").value = 1;
+      $("leftSupport").value = "fixed";
+      $("rightSupport").value = "pin";
+      $("bottomRelease").value = "both";
+      $("defScale").value = 0;
+      run();
+    }
 
-        function renderRadioGroups() {
-            const rgConfig = [
-                { id: 'rg-beamConfiguration', key: 'beamConfiguration', opts: [{l:'2', v:'two-beams'},{l:'3', v:'three-beams'},{l:'4', v:'four-beams', c:'red'}] },
-                { id: 'rg-supportCondition', key: 'supportCondition', opts: [{l:'Simply Supp', v:'simply-supported'},{l:'Fixed', v:'fixed-supports', c:'red'}] },
-                { id: 'rg-loadCalculationMode', key: 'loadCalculationMode', opts: [{l:'Point', v:'point_load', c:'red'},{l:'UDL', v:'udl'}] }
-            ];
+    function varColor(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue("--" + name).trim();
+    }
 
-            rgConfig.forEach(rg => {
-                const container = document.getElementById(rg.id);
-                container.innerHTML = '';
-                rg.opts.forEach(opt => {
-                    const isRed = opt.c === 'red';
-                    const isChecked = state[rg.key] === opt.v;
-                    const cBase = "radio-btn-label " + (isChecked ? (isRed ? 'active-red' : 'active-blue') : '');
-                    const rClass = `form-radio h-3 w-3 ${isRed ? 'text-red-600' : 'text-blue-600'}`;
-                    
-                    const lbl = document.createElement('label');
-                    lbl.className = cBase;
-                    lbl.innerHTML = `<input type="radio" class="${rClass}" name="${rg.key}" value="${opt.v}" ${isChecked ? 'checked' : ''}><span class="text-[11px] font-medium text-gray-700 ml-1.5">${opt.l}</span>`;
-                    lbl.querySelector('input').addEventListener('change', e => {
-                        state[rg.key] = e.target.value;
-                        renderRadioGroups();
-                        runCalculations();
-                    });
-                    container.appendChild(lbl);
-                });
-            });
-        }
+    function svgEl(name, attrs) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+      Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+      return el;
+    }
 
-        function renderSpacers() {
-            const container = document.getElementById('spacer-list-container');
-            container.innerHTML = '';
-            state.spacerConfig.forEach((spacing, i) => {
-                const title = i === 0 ? 'Face of beam to first spacer mid:' : `Spacer ${i} mid to spacer ${i+1} mid:`;
-                const div = document.createElement('div'); div.className = 'input-row';
-                div.innerHTML = `<label class="input-label" title="${title}">${title}</label><input type="number" class="input-box hide-spinners" value="${spacing}">`;
-                div.querySelector('input').addEventListener('input', e => {
-                    state.spacerConfig[i] = Number(e.target.value);
-                    runCalculations();
-                });
-                container.appendChild(div);
-            });
-        }
+    function line(svg, x1, y1, x2, y2, stroke, width, opacity) {
+      svg.appendChild(svgEl("line", { x1, y1, x2, y2, stroke, "stroke-width": width, "stroke-linecap": "round", opacity }));
+    }
 
-        window.addSpacer = function() { state.spacerConfig.push(0); renderSpacers(); runCalculations(); };
-        window.removeSpacer = function() { if(state.spacerConfig.length > 1) { state.spacerConfig.pop(); renderSpacers(); runCalculations(); }};
-        
-        window.toggleSection = function(id) {
-            const el = document.getElementById(id);
-            const icon = document.getElementById('icon-' + id);
-            if (el.classList.contains('hidden')) { el.classList.remove('hidden'); icon.textContent = '▼'; }
-            else { el.classList.add('hidden'); icon.textContent = '▶'; }
-        }
+    function rect(svg, x, y, w, h, fill, stroke = "none") {
+      svg.appendChild(svgEl("rect", { x, y, width: w, height: h, fill, stroke, "stroke-width": 1 }));
+    }
 
-        window.toggleCheckbox = function(id) {
-            const el = document.getElementById(id);
-            el.checked = !el.checked;
-            el.dispatchEvent(new Event('change'));
-        }
+    function circle(svg, cx, cy, r, fill, stroke) {
+      svg.appendChild(svgEl("circle", { cx, cy, r, fill, stroke, "stroke-width": 2 }));
+    }
 
-        window.setPage = function(page) {
-            state.currentPage = page;
-            document.getElementById('page-input').classList.add('hidden');
-            document.getElementById('page-tributary').classList.add('hidden');
-            document.getElementById('page-landscape').classList.add('hidden');
-            document.getElementById('page-' + page).classList.remove('hidden');
-            updateUI(); // Trigger resize/canvas draws
-        }
+    function path(svg, d, fill, stroke, width, opacity) {
+      svg.appendChild(svgEl("path", { d, fill, stroke, "stroke-width": width, "stroke-linejoin": "round", opacity }));
+    }
 
-        function updateUI() {
-            // Update conditional input visibility
-            document.getElementById('wrap-rearBeamOffset').classList.toggle('hidden', !state.hasRearBeam);
-            document.getElementById('wrap-frontBeamOffset').classList.toggle('hidden', !state.hasFrontBeam);
-            document.getElementById('sec-spacer-container').classList.toggle('hidden', state.loadCalculationMode !== 'point_load');
+    function polyline(svg, points, stroke, width) {
+      svg.appendChild(svgEl("polyline", { points, fill: "none", stroke, "stroke-width": width, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    }
 
-            // Force sheet thickness sync
-            document.getElementById('in-sheetT2').value = state.steelThickness;
+    function text(svg, x, y, content, fill, size, anchor) {
+      const el = svgEl("text", { x, y, fill, "font-size": size, "text-anchor": anchor, "font-family": "Segoe UI, Arial, sans-serif" });
+      el.textContent = content;
+      svg.appendChild(el);
+    }
 
-            // Draw Canvases
-            if (state.currentPage === 'input') {
-                const canvas = document.getElementById('main-canvas');
-                const container = document.getElementById('canvas-container');
-                drawCanvas(canvas, container, 0.90);
-            } else if (state.currentPage === 'landscape') {
-                const canvas = document.getElementById('landscape-canvas');
-                const container = document.getElementById('landscape-container');
-                drawCanvas(canvas, container, 0.95);
-                document.getElementById('out-sheetL').textContent = state.steelSheetActualLength;
-                document.getElementById('out-sheetW').textContent = state.steelSheetActualWidth;
-                document.getElementById('out-sheetArea').textContent = (state.steelSheetActualLength * state.steelSheetActualWidth).toLocaleString();
-            } else if (state.currentPage === 'tributary') {
-                renderTributaryPage();
-            }
+    function hinge(svg, x, y) {
+      circle(svg, x, y, 8, "#ffffff", "#b76514");
+    }
 
-            // Update Beam Analysis Panel if visible
-            if (state.analysis && state.currentPage === 'input') {
-                document.getElementById('analysis-panel').classList.remove('hidden');
-                document.getElementById('out-sheetWeightKG').textContent = ((state.calculatedTotalSheetLoad * 1000) / 9.81).toFixed(1);
-                document.getElementById('out-sheetWeightKN').textContent = state.calculatedTotalSheetLoad.toFixed(2);
-                
-                const { criticalBeam, maxThickness, limitingFactor, allResults } = state.analysis;
-                const selProf = ALL_PROFILES.find(p => p.name === state.selectedProfileName);
-                
-                document.getElementById('out-criticalBeamName').textContent = criticalBeam ? "Critical Beam: " + criticalBeam.name : "Critical Beam: -";
-                
-                if (criticalBeam) {
-                    const E_MPa = 210000; const I_cm4 = selProf.Iy || 0;
-                    const bSpan = state.allBeamsLoadData.find(b => b.name === criticalBeam.name).span;
-                    const maxDeflection = calculateBeamDeflection(state.supportCondition, bSpan, criticalBeam.deflectionLoads.pointLoads, criticalBeam.deflectionLoads.udlData, criticalBeam.deflectionLoads.selfWeight, E_MPa, I_cm4);
-                    const allowableDeflection = bSpan / 200;
-                    const plasticMomentResistance = (selProf.Wpl_y * state.fy) / 1000;
-                    const utilizationRatio = (plasticMomentResistance > state.EPSILON) ? (criticalBeam.maxMoment / plasticMomentResistance) * 100 : 0;
+    function arrow(svg, x1, y1, x2, y2, color, label) {
+      line(svg, x1, y1, x2, y2, color, 3, 1);
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const a1 = angle + Math.PI * 0.78;
+      const a2 = angle - Math.PI * 0.78;
+      const r = 11;
+      path(svg, `M ${x2} ${y2} L ${x2 + Math.cos(a1) * r} ${y2 + Math.sin(a1) * r} M ${x2} ${y2} L ${x2 + Math.cos(a2) * r} ${y2 + Math.sin(a2) * r}`, "none", color, 3, 1);
+      text(svg, x1 + 6, y1 - 6, label + " N", color, 12, "start");
+    }
 
-                    document.getElementById('out-maxMoment').textContent = criticalBeam.maxMoment.toFixed(2);
-                    
-                    const panelRes = document.getElementById('panel-momentRes');
-                    const panelChecks = document.getElementById('panel-checks');
-                    const panelUtil = document.getElementById('panel-utilization');
+    document.querySelectorAll(".tab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".tabPanel").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        $(btn.dataset.tab).classList.add("active");
+        if (btn.dataset.tab === "diagramTab" && lastResult) renderDiagram(lastResult);
+      });
+    });
 
-                    if (selProf.name !== 'Select Profile') {
-                        panelRes.classList.remove('hidden'); panelChecks.classList.remove('hidden'); panelUtil.classList.remove('hidden');
-                        document.getElementById('out-plasticMoment').textContent = plasticMomentResistance.toFixed(2);
-                        
-                        // Check Moment
-                        const mPass = criticalBeam.maxMoment <= plasticMomentResistance;
-                        const cMbg = document.getElementById('check-moment-bg');
-                        const cMst = document.getElementById('check-moment-status');
-                        cMbg.className = `p-4 rounded border flex justify-between items-center ${mPass ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`;
-                        cMst.className = `font-bold px-3 py-1 rounded-full text-xs ${mPass ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`;
-                        cMst.textContent = mPass ? 'PASS' : 'FAIL';
-                        document.getElementById('check-moment-val').innerHTML = `${criticalBeam.maxMoment.toFixed(2)} &le; ${plasticMomentResistance.toFixed(2)}`;
+    initSectionCatalog();
+    const sectionControlIds = new Set(["armFamily", "armSection", "armAxis", "columnFamily", "columnSection", "columnAxis"]);
 
-                        // Check Deflection
-                        const dPass = Math.abs(maxDeflection) <= allowableDeflection;
-                        const cDbg = document.getElementById('check-deflection-bg');
-                        const cDst = document.getElementById('check-deflection-status');
-                        cDbg.className = `p-4 rounded border flex justify-between items-center ${dPass ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`;
-                        cDst.className = `font-bold px-3 py-1 rounded-full text-xs ${dPass ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`;
-                        cDst.textContent = dPass ? 'PASS' : 'FAIL';
-                        document.getElementById('check-deflection-val').innerHTML = `${Math.abs(maxDeflection).toFixed(2)} &le; ${allowableDeflection.toFixed(2)}`;
+    $("runBtn").addEventListener("click", run);
+    $("resetBtn").addEventListener("click", resetDefaults);
+    $("memberSelect").addEventListener("change", () => lastResult && renderDiagram(lastResult));
+    ["armFamily", "columnFamily"].forEach((id) => {
+      $(id).addEventListener("change", () => {
+        const role = id.replace("Family", "");
+        populateSectionSelect(role);
+        updateSectionInputs();
+        run();
+      });
+    });
+    ["armSection", "columnSection"].forEach((id) => {
+      $(id).addEventListener("change", () => {
+        const role = id.replace("Section", "");
+        populateAxisSelect(role);
+        updateSectionInputs();
+        run();
+      });
+    });
+    ["armAxis", "columnAxis"].forEach((id) => {
+      $(id).addEventListener("change", () => {
+        updateSectionInputs();
+        run();
+      });
+    });
+    $("download3dd").addEventListener("click", () => lastResult && downloadText("rack-frame2d.3dd", lastResult.frame3dd));
+    $("downloadJson").addEventListener("click", () => lastResult && downloadText("rack-frame2d-results.json", JSON.stringify(lastResult, null, 2)));
+    $("copy3dd").addEventListener("click", async () => {
+      if (!lastResult) return;
+      await navigator.clipboard.writeText(lastResult.frame3dd);
+    });
+    document.querySelectorAll("input, select").forEach((el) => {
+      if (sectionControlIds.has(el.id)) return;
+      el.addEventListener("change", run);
+    });
 
-                        document.getElementById('out-utilization').textContent = utilizationRatio.toFixed(2) + '%';
-                        
-                        const cTbg = document.getElementById('check-thickness-bg');
-                        cTbg.className = `flex flex-col sm:flex-row items-center justify-between p-4 rounded border ${maxThickness > 0 ? 'bg-purple-50 border-purple-200' : 'bg-gray-50 border-gray-200'}`;
-                        document.getElementById('out-maxSheetT').innerHTML = maxThickness > 0 ? `<span class="text-lg font-mono font-bold text-purple-800">${maxThickness.toFixed(2)} mm</span>` : `<span class="text-sm text-gray-500">N/A</span>`;
-                        document.getElementById('out-limitingFactor').textContent = limitingFactor;
-
-                    } else {
-                        panelRes.classList.add('hidden'); panelChecks.classList.add('hidden'); panelUtil.classList.add('hidden');
-                    }
-
-                    // Render Tables
-                    const tClass = "px-3 py-2 text-center border-r whitespace-nowrap text-sm";
-                    
-                    let htmlReactions = '';
-                    allResults.forEach(res => {
-                        const isCrit = res.name === criticalBeam.name;
-                        htmlReactions += `<tr class="${isCrit ? 'bg-blue-50/50' : 'hover:bg-gray-50'}">
-                            <td class="px-4 py-2 whitespace-nowrap font-medium text-gray-800 border-r">${res.name} ${isCrit ? '<span class="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded ml-1">Critical</span>' : ''}</td>
-                            <td class="${tClass} text-gray-600 font-mono">${res.serviceReactions.RA.toFixed(2)}</td>
-                            <td class="${tClass} text-gray-600 font-mono">${res.serviceReactions.RB.toFixed(2)}</td>
-                            <td class="${tClass} font-bold text-gray-900 font-mono">${res.factoredReactions.RA.toFixed(2)}</td>
-                            <td class="px-3 py-2 text-center whitespace-nowrap text-sm font-bold text-gray-900 font-mono">${res.factoredReactions.RB.toFixed(2)}</td>
-                        </tr>`;
-                    });
-                    document.getElementById('tb-reactions').innerHTML = htmlReactions;
-
-                    let htmlBreakdown = '';
-                    allResults.forEach(res => {
-                        htmlBreakdown += `<tr class="hover:bg-gray-50">
-                            <td class="px-3 py-2 whitespace-nowrap font-medium text-gray-800 border-r">${res.name}</td>
-                            <td class="${tClass} font-mono text-gray-500">${res.breakdown.serviceDL.RA.toFixed(2)}</td><td class="${tClass} font-mono text-gray-500">${res.breakdown.serviceDL.RB.toFixed(2)}</td>
-                            <td class="${tClass} font-mono text-gray-500">${res.breakdown.serviceLL.RA.toFixed(2)}</td><td class="${tClass} font-mono text-gray-500">${res.breakdown.serviceLL.RB.toFixed(2)}</td>
-                            <td class="${tClass} font-mono text-gray-800">${res.breakdown.factoredDL.RA.toFixed(2)}</td><td class="${tClass} font-mono text-gray-800">${res.breakdown.factoredDL.RB.toFixed(2)}</td>
-                            <td class="${tClass} font-mono text-gray-800">${res.breakdown.factoredLL.RA.toFixed(2)}</td><td class="px-2 py-2 text-center text-gray-800 font-mono text-sm">${res.breakdown.factoredLL.RB.toFixed(2)}</td>
-                        </tr>`;
-                    });
-                    document.getElementById('tb-breakdown').innerHTML = htmlBreakdown;
-
-                } else {
-                    document.getElementById('out-maxMoment').textContent = "0.00";
-                    document.getElementById('panel-momentRes').classList.add('hidden');
-                    document.getElementById('panel-checks').classList.add('hidden');
-                    document.getElementById('panel-utilization').classList.add('hidden');
-                    document.getElementById('tb-reactions').innerHTML = '';
-                    document.getElementById('tb-breakdown').innerHTML = '';
-                }
-            }
-        }
-
-        function drawCanvas(canvas, container, scaleModifier) {
-            const rect = container.getBoundingClientRect();
-            if (rect.width === 0 || rect.height === 0) return;
-            
-            canvas.width = rect.width * window.devicePixelRatio; 
-            canvas.height = rect.height * window.devicePixelRatio;
-            canvas.style.width = `${rect.width}px`; 
-            canvas.style.height = `${rect.height}px`;
-            
-            const ctx = canvas.getContext('2d');
-            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, rect.width, rect.height);
-            
-            drawPlan(ctx, canvas, true, state.showSteelSheet, state.loadCalculationMode, scaleModifier);
-        }
-
-        function renderTributaryPage() {
-            if (Object.keys(state.tributaryData).length === 0) {
-                document.getElementById('trib-content').classList.add('hidden');
-                document.getElementById('trib-error').classList.remove('hidden');
-                return;
-            }
-            document.getElementById('trib-content').classList.remove('hidden');
-            document.getElementById('trib-error').classList.add('hidden');
-
-            const list = document.getElementById('trib-list');
-            list.innerHTML = '';
-            for (const [key, d] of Object.entries(state.tributaryData)) {
-                let inner = '';
-                if (state.loadCalculationMode === 'point_load') {
-                    inner = `<div class="text-gray-600 space-y-1.5 ml-2 grid grid-cols-2 gap-x-8 gap-y-2">
-                        <div class="flex justify-between"><span>Area:</span> <span class="font-mono text-gray-700">${(d.area||0).toFixed(2)} mm²</span></div>
-                        <div class="flex justify-between"><span>Sheet Load:</span> <span class="font-mono text-gray-700">${(d.sheetPointLoad||0).toFixed(4)} kN</span></div>
-                        <div class="flex justify-between"><span>Spacer Load:</span> <span class="font-mono text-gray-700">${(d.spacerPointLoad||0).toFixed(4)} kN</span></div>
-                        <div class="flex justify-between"><span class="font-semibold text-gray-700">Total Point:</span> <span class="font-mono font-bold text-blue-600">${(d.pointLoad||0).toFixed(4)} kN</span></div>
-                    </div>`;
-                } else {
-                    inner = `<div class="text-gray-600 space-y-1.5 ml-2 grid grid-cols-2 gap-x-8 gap-y-2">
-                        <div class="flex justify-between"><span>Area:</span> <span class="font-mono text-gray-700">${(d.area||0).toFixed(2)} mm²</span></div>
-                        <div class="flex justify-between"><span>UDL:</span> <span class="font-mono text-gray-700">${(d.udl||0).toFixed(4)} kN/m</span></div>
-                        <div class="flex justify-between col-span-2"><span class="font-semibold text-gray-700">Total Load:</span> <span class="font-mono font-bold text-blue-600">${(d.totalLoad||0).toFixed(4)} kN</span></div>
-                    </div>`;
-                }
-                list.innerHTML += `<li class="py-3 border-b border-gray-100 last:border-0"><span class="text-gray-800 font-bold block mb-2 text-base">${key}</span>${inner}</li>`;
-            }
-
-            document.getElementById('out-totArea').textContent = (state.totalTributaryArea || 0).toFixed(2) + ' mm²';
-            document.getElementById('out-totLoad').textContent = (state.totalPointLoad || 0).toFixed(4) + ' kN';
-            document.getElementById('out-sheetWtSum').textContent = ((state.calculatedTotalSheetLoad * 1000) / 9.81).toFixed(2) + ' KG';
-            
-            document.getElementById('li-restingSum').classList.toggle('hidden', state.loadCalculationMode !== 'point_load');
-            document.getElementById('out-restingSum').textContent = (state.sumOfRestingPointLoads || 0).toFixed(4) + ' kN';
-
-            if (state.beamAnalysisData?.criticalBeamName) {
-                document.getElementById('panel-critBeam').classList.remove('hidden');
-                document.getElementById('out-critBeamTitle').textContent = state.beamAnalysisData.criticalBeamName;
-            } else {
-                document.getElementById('panel-critBeam').classList.add('hidden');
-            }
-        }
-
-        // --- INIT ---
-        window.onload = function() {
-            bindInputs();
-            runCalculations();
-            
-            // Re-draw on window resize
-            window.addEventListener('resize', () => {
-                if (state.currentPage === 'input' || state.currentPage === 'landscape') {
-                    updateUI();
-                }
-            });
-        };
-
-    </script>
+    run();
+  </script>
 </body>
 </html>
