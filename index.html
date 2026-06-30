@@ -140,7 +140,7 @@
 
     .sectionMeta {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 8px;
       margin: 8px 0 10px;
       color: var(--muted);
@@ -153,6 +153,25 @@
       padding: 7px 8px;
       background: #f8fafc;
       overflow-wrap: anywhere;
+    }
+
+    .memberSectionGrid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .memberSectionBlock {
+      border: 1px solid #d8e0ea;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcfe;
+    }
+
+    .memberSectionBlock h3 {
+      margin: 0 0 8px;
+      color: #253445;
+      font-size: 12px;
+      font-weight: 760;
     }
 
     .actions {
@@ -181,7 +200,7 @@
 
     .armRow {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 34px;
+      grid-template-columns: 0.95fr 0.95fr 0.95fr 0.95fr 34px;
       gap: 6px;
       align-items: end;
       padding: 8px;
@@ -470,6 +489,7 @@
           <div class="hiddenData">
             <input id="armHeights" value="0, 1500, 3000">
             <input id="tipLoads" value="0, 8000, 8000">
+            <input id="pointPositions" value="2400, 2400, 2400">
             <input id="udlLoads" value="0, 0, 0">
           </div>
         </div>
@@ -478,28 +498,44 @@
       <section>
         <h2>Section</h2>
         <div class="body">
-          <div class="grid2">
-            <label>Arm family
-              <select id="armFamily"></select>
-            </label>
-            <label>Column family
-              <select id="columnFamily"></select>
-            </label>
+          <div class="memberSectionGrid">
+            <div class="memberSectionBlock">
+              <h3>Cantilever arms</h3>
+              <label>Family
+                <select id="armFamily"></select>
+              </label>
+              <label>Section
+                <select id="armSection"></select>
+              </label>
+              <label>Bending axis
+                <select id="armAxis"></select>
+              </label>
+            </div>
+            <div class="memberSectionBlock">
+              <h3>Column</h3>
+              <label>Family
+                <select id="columnFamily"></select>
+              </label>
+              <label>Section
+                <select id="columnSection"></select>
+              </label>
+              <label>Bending axis
+                <select id="columnAxis"></select>
+              </label>
+            </div>
+            <div class="memberSectionBlock">
+              <h3>Base beam</h3>
+              <label>Family
+                <select id="baseFamily"></select>
+              </label>
+              <label>Section
+                <select id="baseSection"></select>
+              </label>
+              <label>Bending axis
+                <select id="baseAxis"></select>
+              </label>
+            </div>
           </div>
-          <label>Arm section
-            <select id="armSection"></select>
-          </label>
-          <div class="grid2">
-            <label>Arm bending axis
-              <select id="armAxis"></select>
-            </label>
-            <label>Column bending axis
-              <select id="columnAxis"></select>
-            </label>
-          </div>
-          <label>Column section
-            <select id="columnSection"></select>
-          </label>
           <div id="sectionMeta" class="sectionMeta"></div>
           <div class="grid3">
             <label>E
@@ -555,6 +591,12 @@
           </label>
           <label>Deformed shape scale
             <input id="defScale" type="number" value="0" step="1">
+          </label>
+          <label>Rack visual
+            <select id="renderMode">
+              <option value="sections" selected>Dynamic section render</option>
+              <option value="centerline">Centerline model</option>
+            </select>
           </label>
           <div class="note">Scale 0 uses automatic scaling. End releases are exact in this solver.</div>
         </div>
@@ -669,10 +711,13 @@
     function armScheduleFromBackingInputs() {
       const heights = parseList("armHeights");
       const loads = parseList("tipLoads");
+      const positions = parseList("pointPositions");
       const udls = parseList("udlLoads");
+      const armLength = Math.max(Number($("armLength")?.value) || 2400, 1);
       return heights.map((height, i) => ({
         height,
         point: loads[i] || 0,
+        pointX: Number.isFinite(positions[i]) ? positions[i] : armLength,
         udl: udls[i] || 0
       }));
     }
@@ -683,11 +728,13 @@
       const schedule = rows.map((row) => {
         const height = Number(row.querySelector('[data-field="height"]').value);
         const point = Number(row.querySelector('[data-field="point"]').value);
+        const pointX = Number(row.querySelector('[data-field="pointX"]').value);
         const udl = Number(row.querySelector('[data-field="udl"]').value);
-        if (![height, point, udl].every(Number.isFinite)) throw new Error("Arm schedule contains an invalid number.");
-        return { height, point, udl };
+        if (![height, point, pointX, udl].every(Number.isFinite)) throw new Error("Arm schedule contains an invalid number.");
+        return { height, point, pointX, udl };
       });
-      if (!schedule.some((row) => Math.abs(row.height) < 1e-8)) schedule.push({ height: 0, point: 0, udl: 0 });
+      const armLength = Math.max(Number($("armLength")?.value) || 2400, 1);
+      if (!schedule.some((row) => Math.abs(row.height) < 1e-8)) schedule.push({ height: 0, point: 0, pointX: armLength, udl: 0 });
       schedule.sort((a, b) => a.height - b.height);
       for (let i = 1; i < schedule.length; i++) {
         if (Math.abs(schedule[i].height - schedule[i - 1].height) < 1e-8) throw new Error("Arm schedule contains duplicate heights.");
@@ -698,6 +745,7 @@
     function writeArmBackingInputs(schedule) {
       $("armHeights").value = schedule.map((row) => round(row.height, 6)).join(", ");
       $("tipLoads").value = schedule.map((row) => round(row.point, 6)).join(", ");
+      $("pointPositions").value = schedule.map((row) => round(row.pointX, 6)).join(", ");
       $("udlLoads").value = schedule.map((row) => round(row.udl, 6)).join(", ");
     }
 
@@ -717,16 +765,19 @@
     function addArmRow(row) {
       const item = document.createElement("div");
       item.className = "armRow";
+      const armLength = Math.max(Number($("armLength")?.value) || 2400, 1);
+      const pointX = Number.isFinite(row.pointX) ? row.pointX : armLength;
       [
         ["Height", "height", row.height],
-        ["Tip load", "point", row.point],
+        ["Point load", "point", row.point],
+        ["Load x", "pointX", pointX],
         ["UDL", "udl", row.udl]
       ].forEach(([labelText, field, value]) => {
         const label = document.createElement("label");
         label.textContent = labelText;
         const input = document.createElement("input");
         input.type = "number";
-        input.step = field === "height" ? "10" : "100";
+        input.step = field === "height" || field === "pointX" ? "10" : "100";
         input.value = round(value, 6);
         input.dataset.field = field;
         label.appendChild(input);
@@ -753,7 +804,7 @@
       let next = Math.min(columnHeight, Math.max(...schedule.map((row) => row.height), 0) + 750);
       while (used.has(round(next, 6)) && next < columnHeight) next = Math.min(columnHeight, next + 250);
       if (used.has(round(next, 6))) next = Math.max(0, columnHeight - 250);
-      addArmRow({ height: next, point: 0, udl: 0 });
+      addArmRow({ height: next, point: 0, pointX: Math.max(Number($("armLength").value) || 2400, 1), udl: 0 });
       syncArmRowsToInputs();
     }
 
@@ -845,11 +896,17 @@
       const axisKey = $(role + "Axis").value || "major";
       const axis = (section.axes || []).find((item) => item.key === axisKey) || section.axes?.[0];
       if (!axis || !section.area_mm2 || !axis.I_mm4) return null;
+      const depth = Number(section.depth_mm) || Math.sqrt(section.area_mm2);
+      const width = Number(section.width_mm) || depth;
+      const renderDepth = axis.key === "minor" ? width : depth;
       return {
         section,
         axis,
         A: section.area_mm2,
         I: axis.I_mm4,
+        depth,
+        width,
+        renderDepth,
         label: section.designation + " " + section.family + " / " + axis.label
       };
     }
@@ -863,6 +920,7 @@
       }
       const arm = selectedMemberProperties("arm");
       const column = selectedMemberProperties("column");
+      const base = selectedMemberProperties("base");
       if (arm) {
         $("A").value = round(arm.A, 3);
         $("I").value = round(arm.I, 3);
@@ -870,11 +928,12 @@
       $("sectionMeta").innerHTML = "";
       [
         ["Arm", arm],
-        ["Column", column]
+        ["Column", column],
+        ["Base beam", base]
       ].forEach(([title, props]) => {
         const item = document.createElement("div");
         item.textContent = props
-          ? title + ": " + props.label + ", A=" + fmt(props.A, 1) + " mm2, I=" + fmt(props.I, 0) + " mm4"
+          ? title + ": " + props.label + ", A=" + fmt(props.A, 1) + " mm2, I=" + fmt(props.I, 0) + " mm4, render depth=" + fmt(props.renderDepth, 0) + " mm"
           : title + ": manual properties";
         $("sectionMeta").appendChild(item);
       });
@@ -884,8 +943,10 @@
     function initSectionCatalog() {
       populateFamilies("armFamily", "PFC");
       populateFamilies("columnFamily", "SHS");
+      populateFamilies("baseFamily", "PFC");
       populateSectionSelect("arm", "PFC|180x75x20");
       populateSectionSelect("column", "SHS|150 x 150 x 6.3");
+      populateSectionSelect("base", "PFC|180x75x20");
       updateSectionInputs();
     }
 
@@ -1063,6 +1124,15 @@
       return [false, false, false];
     }
 
+    function fallbackMemberProperties(A, I, label) {
+      return {
+        A,
+        I,
+        label,
+        renderDepth: Math.max(Math.sqrt(A), 40)
+      };
+    }
+
     function readModel() {
       updateSectionInputs();
       const columnHeight = numberValue("columnHeight");
@@ -1074,6 +1144,7 @@
       const colIMult = numberValue("colIMult");
       const armProps = selectedMemberProperties("arm");
       const columnProps = selectedMemberProperties("column");
+      const baseProps = selectedMemberProperties("base");
       if (columnHeight <= 0 || armLength <= 0 || E <= 0 || A <= 0 || I <= 0) {
         throw new Error("Geometry and section properties must be positive.");
       }
@@ -1082,34 +1153,49 @@
       if (schedule.some((row) => row.height < 0 || row.height > columnHeight)) {
         throw new Error("Arm heights must lie between 0 and the column height.");
       }
+      if (schedule.some((row) => row.pointX < 0 || row.pointX > armLength)) {
+        throw new Error("Load x positions must lie between 0 and the arm length.");
+      }
       const heights = uniqueSorted([0, ...schedule.map((row) => row.height)]);
-      const pointByHeight = new Map();
       const udlByHeight = new Map();
       heights.forEach((h) => {
-        pointByHeight.set(h, 0);
         udlByHeight.set(h, 0);
       });
       schedule.forEach((row) => {
-        pointByHeight.set(row.height, row.point);
         udlByHeight.set(row.height, row.udl);
       });
+      const armRole = armProps || fallbackMemberProperties(A, I, "manual arm properties");
+      const columnRole = columnProps || fallbackMemberProperties(A, I, "manual column properties");
+      const baseRole = baseProps || fallbackMemberProperties(A, I, "manual base beam properties");
       return {
         columnHeight,
         armLength,
         armHeights: heights,
+        armSchedule: schedule.map((row) => ({ ...row })),
         E,
         A,
         I,
-        colA: (columnProps ? columnProps.A : A) * colAMult,
-        colI: (columnProps ? columnProps.I : I) * colIMult,
-        armSection: armProps ? armProps.label : "manual arm properties",
-        columnSection: columnProps ? columnProps.label : "manual column properties",
-        pointByHeight,
+        armA: armRole.A,
+        armI: armRole.I,
+        armDepth: armRole.renderDepth,
+        baseA: baseRole.A,
+        baseI: baseRole.I,
+        baseDepth: baseRole.renderDepth,
+        colA: columnRole.A * colAMult,
+        colI: columnRole.I * colIMult,
+        colDepth: columnRole.renderDepth,
+        armSection: armRole.label,
+        columnSection: columnRole.label,
+        baseSection: baseRole.label,
+        pointLoads: schedule
+          .filter((row) => Math.abs(row.point) > 1e-9)
+          .map((row) => ({ height: row.height, x: row.pointX, P: row.point })),
         udlByHeight,
         leftSupport: $("leftSupport").value,
         rightSupport: $("rightSupport").value,
         bottomRelease: $("bottomRelease").value,
-        defScale: numberValue("defScale")
+        defScale: numberValue("defScale"),
+        renderMode: $("renderMode").value
       };
     }
 
@@ -1124,17 +1210,38 @@
       });
 
       const tipNodeAt = new Map();
+      const armNodeAt = new Map();
+      function armKey(y, x) {
+        return round(y, 8) + "|" + round(x, 8);
+      }
       input.armHeights.forEach((y) => {
-        const node = { id: nodes.length + 1, x: input.armLength, y, label: "A@" + y };
-        nodes.push(node);
-        tipNodeAt.set(y, node.id);
+        armNodeAt.set(armKey(y, 0), colNodeAt.get(y));
+      });
+      input.armHeights.forEach((y) => {
+        const row = input.armSchedule.find((item) => Math.abs(item.height - y) < 1e-8);
+        const xLocations = uniqueSorted([
+          input.armLength,
+          row && Math.abs(row.point) > 1e-9 ? row.pointX : null
+        ].filter((x) => Number.isFinite(x) && x > 1e-8));
+        xLocations.forEach((x) => {
+          const node = { id: nodes.length + 1, x, y, label: (Math.abs(x - input.armLength) < 1e-8 ? "A" : "P") + "@" + y + "," + x };
+          nodes.push(node);
+          armNodeAt.set(armKey(y, x), node.id);
+        });
+        tipNodeAt.set(y, armNodeAt.get(armKey(y, input.armLength)));
       });
 
       const elements = [];
+      function memberPropsForType(type) {
+        if (type === "column") return { A: input.colA, I: input.colI, renderDepth: input.colDepth };
+        if (type === "bottom") return { A: input.baseA, I: input.baseI, renderDepth: input.baseDepth };
+        return { A: input.armA, I: input.armI, renderDepth: input.armDepth };
+      }
       for (let i = 0; i < levels.length - 1; i++) {
         const y1 = levels[i];
         const y2 = levels[i + 1];
         if (y2 === y1) continue;
+        const props = memberPropsForType("column");
         elements.push({
           id: elements.length + 1,
           name: "Column " + y1 + "-" + y2,
@@ -1142,37 +1249,55 @@
           i: colNodeAt.get(y1),
           j: colNodeAt.get(y2),
           E: input.E,
-          A: input.colA,
-          I: input.colI,
+          A: props.A,
+          I: props.I,
+          renderDepth: props.renderDepth,
           releases: { rzI: false, rzJ: false },
           qLocalY: 0
         });
       }
 
       input.armHeights.forEach((y) => {
-        const releases = { rzI: false, rzJ: false };
-        if (y === 0) {
-          releases.rzI = input.bottomRelease === "both" || input.bottomRelease === "left";
-          releases.rzJ = input.bottomRelease === "both" || input.bottomRelease === "right";
+        const row = input.armSchedule.find((item) => Math.abs(item.height - y) < 1e-8);
+        const xLocations = uniqueSorted([
+          0,
+          input.armLength,
+          row && Math.abs(row.point) > 1e-9 ? row.pointX : null
+        ].filter((x) => Number.isFinite(x)));
+        for (let i = 0; i < xLocations.length - 1; i++) {
+          const x1 = xLocations[i];
+          const x2 = xLocations[i + 1];
+          if (Math.abs(x2 - x1) < 1e-8) continue;
+          const type = y === 0 ? "bottom" : "arm";
+          const props = memberPropsForType(type);
+          const releases = { rzI: false, rzJ: false };
+          if (y === 0) {
+            releases.rzI = i === 0 && (input.bottomRelease === "both" || input.bottomRelease === "left");
+            releases.rzJ = i === xLocations.length - 2 && (input.bottomRelease === "both" || input.bottomRelease === "right");
+          }
+          elements.push({
+            id: elements.length + 1,
+            name: (y === 0 ? "Bottom member" : "Cantilever") + " @" + y + (xLocations.length > 2 ? " " + x1 + "-" + x2 : ""),
+            type,
+            i: armNodeAt.get(armKey(y, x1)),
+            j: armNodeAt.get(armKey(y, x2)),
+            E: input.E,
+            A: props.A,
+            I: props.I,
+            renderDepth: props.renderDepth,
+            releases,
+            qLocalY: -(input.udlByHeight.get(y) || 0)
+          });
         }
-        elements.push({
-          id: elements.length + 1,
-          name: (y === 0 ? "Bottom member" : "Cantilever") + " @" + y,
-          type: y === 0 ? "bottom" : "arm",
-          i: colNodeAt.get(y),
-          j: tipNodeAt.get(y),
-          E: input.E,
-          A: input.A,
-          I: input.I,
-          releases,
-          qLocalY: -(input.udlByHeight.get(y) || 0)
-        });
       });
 
       const F = Array(nodes.length * 3).fill(0);
-      input.armHeights.forEach((y) => {
-        const tipId = tipNodeAt.get(y);
-        F[dofIndex(tipId, 1)] -= input.pointByHeight.get(y) || 0;
+      const appliedPointLoads = [];
+      input.pointLoads.forEach((load) => {
+        const nodeId = armNodeAt.get(armKey(load.height, load.x));
+        if (!nodeId) throw new Error("Point load node could not be created at Y=" + load.height + ", X=" + load.x + ".");
+        F[dofIndex(nodeId, 1)] -= load.P;
+        appliedPointLoads.push({ ...load, node: nodeId });
       });
 
       const restraints = Array(nodes.length * 3).fill(false);
@@ -1185,7 +1310,7 @@
         if (fixed) restraints[dofIndex(rightNode, d)] = true;
       });
 
-      return { input, nodes, elements, F, restraints, colNodeAt, tipNodeAt };
+      return { input, nodes, elements, F, restraints, colNodeAt, tipNodeAt, armNodeAt, appliedPointLoads };
     }
 
     function analyze(frame) {
@@ -1306,6 +1431,7 @@
 
     function render(result) {
       lastResult = result;
+      window.rackLastResult = result;
       $("errorBox").textContent = "";
       $("errorBox").style.display = "none";
       $("mSway").textContent = fmt(result.summary.maxSway) + " mm";
@@ -1386,14 +1512,18 @@
       const maxDisp = Math.max(...result.U.map(Math.abs), 0);
       const autoScale = maxDisp > 0 ? Math.min(900, (Math.max(maxX - minX, maxY - minY) * 0.08) / maxDisp) : 1;
       const scale = result.input.defScale > 0 ? result.input.defScale : autoScale;
-      $("scaleLabel").textContent = "Deflection scale: " + fmt(scale, 1) + "x";
+      $("scaleLabel").textContent = "Deflection scale: " + fmt(scale, 1) + "x, visual: " + (result.input.renderMode === "sections" ? "dynamic sections" : "centerline");
 
       drawGrid(svg, sx, sy, minX, maxX, minY, maxY);
-      result.elements.forEach((el) => {
-        const ni = result.nodes[el.i - 1];
-        const nj = result.nodes[el.j - 1];
-        line(svg, sx(ni.x), sy(ni.y), sx(nj.x), sy(nj.y), "#111827", 4, 1);
-      });
+      if (result.input.renderMode === "sections") {
+        result.elements.forEach((el) => drawMemberBody(svg, result, el, sx, sy));
+      } else {
+        result.elements.forEach((el) => {
+          const ni = result.nodes[el.i - 1];
+          const nj = result.nodes[el.j - 1];
+          line(svg, sx(ni.x), sy(ni.y), sx(nj.x), sy(nj.y), "#111827", 4, 1);
+        });
+      }
 
       result.elements.forEach((el) => {
         const ni = result.nodes[el.i - 1];
@@ -1404,14 +1534,30 @@
       });
 
       result.nodes.forEach((node) => circle(svg, sx(node.x), sy(node.y), 4, "#ffffff", "#111827"));
-      result.input.armHeights.forEach((y) => {
-        const nodeId = result.tipNodeAt.get(y);
-        const node = result.nodes[nodeId - 1];
-        const p = result.input.pointByHeight.get(y) || 0;
-        if (p > 0) arrow(svg, sx(node.x), sy(node.y + result.input.columnHeight * 0.08), sx(node.x), sy(node.y), varColor("red"), fmt(p, 0));
+      result.appliedPointLoads.forEach((load) => {
+        const node = result.nodes[load.node - 1];
+        if (load.P > 0) arrow(svg, sx(node.x), sy(node.y + result.input.columnHeight * 0.08), sx(node.x), sy(node.y), varColor("red"), fmt(load.P, 0) + " @x " + fmt(load.x, 0));
       });
       drawSupports(svg, result, sx, sy);
       drawReleaseMarkers(svg, result, sx, sy);
+    }
+
+    function drawMemberBody(svg, result, el, sx, sy) {
+      const ni = result.nodes[el.i - 1];
+      const nj = result.nodes[el.j - 1];
+      const half = Math.max(Number(el.renderDepth) || Math.sqrt(el.A) || 40, 20) / 2;
+      const nx = -el.s;
+      const ny = el.c;
+      const pts = [
+        [ni.x + nx * half, ni.y + ny * half],
+        [nj.x + nx * half, nj.y + ny * half],
+        [nj.x - nx * half, nj.y - ny * half],
+        [ni.x - nx * half, ni.y - ny * half]
+      ];
+      const fill = el.type === "column" ? "#dbe8f6" : (el.type === "bottom" ? "#fff1d6" : "#dff3ef");
+      const stroke = el.type === "column" ? "#315f90" : (el.type === "bottom" ? "#9b6412" : "#047a72");
+      path(svg, "M " + pts.map((p) => sx(p[0]) + " " + sy(p[1])).join(" L ") + " Z", fill, stroke, 2, 0.92);
+      line(svg, sx(ni.x), sy(ni.y), sx(nj.x), sy(nj.y), "#263241", 1, 0.45);
     }
 
     function drawGrid(svg, sx, sy, minX, maxX, minY, maxY) {
@@ -1625,6 +1771,7 @@
       lines.push("# Generated by RackFrame2D. Source solver: direct stiffness; format follows pslack/frame3dd examples.");
       lines.push("# Arm section: " + result.input.armSection);
       lines.push("# Column section: " + result.input.columnSection);
+      lines.push("# Base beam section: " + result.input.baseSection);
       lines.push("# Member end releases are not native in Frame3DD input. Released members are flagged below.");
       lines.push("");
       lines.push(result.nodes.length + " # number of nodes");
@@ -1666,10 +1813,8 @@
         prev.mzz += mzz;
         nodal.set(node, prev);
       }
-      result.input.armHeights.forEach((y) => {
-        const node = result.tipNodeAt.get(y);
-        const P = result.input.pointByHeight.get(y) || 0;
-        if (P) addNodeLoad(node, 0, -P, 0);
+      result.appliedPointLoads.forEach((load) => {
+        if (load.P) addNodeLoad(load.node, 0, -load.P, 0);
       });
       result.elements.forEach((el) => {
         if (!el.qLocalY) return;
@@ -1721,6 +1866,7 @@
       $("armLength").value = 2400;
       $("armHeights").value = "0, 1500, 3000";
       $("tipLoads").value = "0, 8000, 8000";
+      $("pointPositions").value = "2400, 2400, 2400";
       $("udlLoads").value = "0, 0, 0";
       renderArmRows(armScheduleFromBackingInputs());
       if (sectionCatalog()) {
@@ -1730,6 +1876,9 @@
         $("columnFamily").value = "SHS";
         populateSectionSelect("column", "SHS|150 x 150 x 6.3");
         $("columnAxis").value = "major";
+        $("baseFamily").value = "PFC";
+        populateSectionSelect("base", "PFC|180x75x20");
+        $("baseAxis").value = "major";
         updateSectionInputs();
       }
       $("E").value = 210000;
@@ -1743,6 +1892,7 @@
       $("rightSupport").value = "pin";
       $("bottomRelease").value = "both";
       $("defScale").value = 0;
+      $("renderMode").value = "sections";
       $("columnQueryY").value = 1800;
       run();
     }
@@ -1811,8 +1961,8 @@
 
     initSectionCatalog();
     renderArmRows(armScheduleFromBackingInputs());
-    const sectionControlIds = new Set(["armFamily", "armSection", "armAxis", "columnFamily", "columnSection", "columnAxis"]);
-    const passiveControlIds = new Set([...sectionControlIds, "columnQueryY", "armHeights", "tipLoads", "udlLoads"]);
+    const sectionControlIds = new Set(["armFamily", "armSection", "armAxis", "columnFamily", "columnSection", "columnAxis", "baseFamily", "baseSection", "baseAxis"]);
+    const passiveControlIds = new Set([...sectionControlIds, "columnQueryY", "armHeights", "tipLoads", "pointPositions", "udlLoads"]);
     let armInputTimer = null;
 
     $("runBtn").addEventListener("click", run);
@@ -1842,7 +1992,7 @@
     $("columnQueryY").addEventListener("input", () => {
       if (lastResult) renderColumnQuery(lastResult);
     });
-    ["armFamily", "columnFamily"].forEach((id) => {
+    ["armFamily", "columnFamily", "baseFamily"].forEach((id) => {
       $(id).addEventListener("change", () => {
         const role = id.replace("Family", "");
         populateSectionSelect(role);
@@ -1850,7 +2000,7 @@
         run();
       });
     });
-    ["armSection", "columnSection"].forEach((id) => {
+    ["armSection", "columnSection", "baseSection"].forEach((id) => {
       $(id).addEventListener("change", () => {
         const role = id.replace("Section", "");
         populateAxisSelect(role);
@@ -1858,7 +2008,7 @@
         run();
       });
     });
-    ["armAxis", "columnAxis"].forEach((id) => {
+    ["armAxis", "columnAxis", "baseAxis"].forEach((id) => {
       $(id).addEventListener("change", () => {
         updateSectionInputs();
         run();
@@ -1875,6 +2025,7 @@
       el.addEventListener("change", run);
     });
 
+    window.rackApi = { readModel, buildFrame, analyze, run };
     run();
   </script>
 </body>
