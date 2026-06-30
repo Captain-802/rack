@@ -195,25 +195,59 @@
 
     .armRows {
       display: grid;
-      gap: 8px;
+      gap: 10px;
     }
 
     .armRow {
       display: grid;
-      grid-template-columns: 0.95fr 0.95fr 0.95fr 0.95fr 34px;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid #d8e0ea;
+      border-radius: 8px;
+      background: #fbfcfe;
+    }
+
+    .armRowTop {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .armRowTitle {
+      color: #253445;
+      font-size: 12px;
+      font-weight: 780;
+    }
+
+    .armRowMeta {
+      color: var(--muted);
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+
+    .armFields,
+    .armSectionControls {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 6px;
       align-items: end;
-      padding: 8px;
-      border: 1px solid #d8e0ea;
-      border-radius: 6px;
-      background: #fbfcfe;
+    }
+
+    .armSectionControls {
+      grid-template-columns: 0.8fr 1.5fr 1fr;
+    }
+
+    .armRow.baseRow .armSectionControls {
+      display: none;
     }
 
     .armRow label {
       margin: 0;
     }
 
-    .armRow input {
+    .armRow input,
+    .armRow select {
       padding: 7px 8px;
     }
 
@@ -452,7 +486,7 @@
 
     @media (max-width: 620px) {
       header { height: auto; min-height: 58px; align-items: flex-start; flex-direction: column; padding: 10px 12px; }
-      .grid2, .grid3, .sectionMeta, .armRow, .queryPanel { grid-template-columns: 1fr; }
+      .grid2, .grid3, .sectionMeta, .armFields, .armSectionControls, .queryPanel { grid-template-columns: 1fr; }
       .summary { grid-template-columns: 1fr; }
       aside, .workspace { padding: 10px; }
       .diagramWrap { height: 310px; }
@@ -471,7 +505,7 @@
   <main>
     <aside>
       <section>
-        <h2>Geometry</h2>
+        <h2>Rack Builder</h2>
         <div class="body">
           <div class="grid2">
             <label>Column height
@@ -491,26 +525,16 @@
             <input id="tipLoads" value="0, 8000, 8000">
             <input id="pointPositions" value="2400, 2400, 2400">
             <input id="udlLoads" value="0, 0, 0">
+            <input id="armSections" value="PFC|180x75x20, PFC|180x75x20, PFC|180x75x20">
+            <input id="armAxes" value="major, major, major">
           </div>
         </div>
       </section>
 
       <section>
-        <h2>Section</h2>
+        <h2>Column And Base Sections</h2>
         <div class="body">
           <div class="memberSectionGrid">
-            <div class="memberSectionBlock">
-              <h3>Cantilever arms</h3>
-              <label>Family
-                <select id="armFamily"></select>
-              </label>
-              <label>Section
-                <select id="armSection"></select>
-              </label>
-              <label>Bending axis
-                <select id="armAxis"></select>
-              </label>
-            </div>
             <div class="memberSectionBlock">
               <h3>Column</h3>
               <label>Family
@@ -692,6 +716,9 @@
     "use strict";
 
     const DOF = ["Ux", "Uy", "Rz"];
+    const DEFAULT_ARM_SECTION_ID = "PFC|180x75x20";
+    const DEFAULT_COLUMN_SECTION_ID = "SHS|150 x 150 x 6.3";
+    const DEFAULT_BASE_SECTION_ID = "PFC|180x75x20";
     const $ = (id) => document.getElementById(id);
     let lastResult = null;
 
@@ -708,17 +735,26 @@
       return values;
     }
 
+    function parseTextList(id) {
+      const el = $(id);
+      return el ? el.value.split(",").map((v) => v.trim()).filter(Boolean) : [];
+    }
+
     function armScheduleFromBackingInputs() {
       const heights = parseList("armHeights");
       const loads = parseList("tipLoads");
       const positions = parseList("pointPositions");
       const udls = parseList("udlLoads");
+      const sectionIds = parseTextList("armSections");
+      const axisKeys = parseTextList("armAxes");
       const armLength = Math.max(Number($("armLength")?.value) || 2400, 1);
       return heights.map((height, i) => ({
         height,
         point: loads[i] || 0,
         pointX: Number.isFinite(positions[i]) ? positions[i] : armLength,
-        udl: udls[i] || 0
+        udl: udls[i] || 0,
+        sectionId: sectionIds[i] || DEFAULT_ARM_SECTION_ID,
+        axisKey: axisKeys[i] || "major"
       }));
     }
 
@@ -730,11 +766,13 @@
         const point = Number(row.querySelector('[data-field="point"]').value);
         const pointX = Number(row.querySelector('[data-field="pointX"]').value);
         const udl = Number(row.querySelector('[data-field="udl"]').value);
+        const sectionId = row.querySelector('[data-field="sectionId"]')?.value || DEFAULT_ARM_SECTION_ID;
+        const axisKey = row.querySelector('[data-field="axisKey"]')?.value || "major";
         if (![height, point, pointX, udl].every(Number.isFinite)) throw new Error("Arm schedule contains an invalid number.");
-        return { height, point, pointX, udl };
+        return { height, point, pointX, udl, sectionId, axisKey };
       });
       const armLength = Math.max(Number($("armLength")?.value) || 2400, 1);
-      if (!schedule.some((row) => Math.abs(row.height) < 1e-8)) schedule.push({ height: 0, point: 0, pointX: armLength, udl: 0 });
+      if (!schedule.some((row) => Math.abs(row.height) < 1e-8)) schedule.push({ height: 0, point: 0, pointX: armLength, udl: 0, sectionId: DEFAULT_ARM_SECTION_ID, axisKey: "major" });
       schedule.sort((a, b) => a.height - b.height);
       for (let i = 1; i < schedule.length; i++) {
         if (Math.abs(schedule[i].height - schedule[i - 1].height) < 1e-8) throw new Error("Arm schedule contains duplicate heights.");
@@ -747,6 +785,8 @@
       $("tipLoads").value = schedule.map((row) => round(row.point, 6)).join(", ");
       $("pointPositions").value = schedule.map((row) => round(row.pointX, 6)).join(", ");
       $("udlLoads").value = schedule.map((row) => round(row.udl, 6)).join(", ");
+      $("armSections").value = schedule.map((row) => row.sectionId || DEFAULT_ARM_SECTION_ID).join(", ");
+      $("armAxes").value = schedule.map((row) => row.axisKey || "major").join(", ");
     }
 
     function syncArmRowsToInputs() {
@@ -760,6 +800,7 @@
       container.replaceChildren();
       schedule.forEach((row) => addArmRow(row));
       syncArmRowsToInputs();
+      if (sectionCatalog()) updateSectionInputs();
     }
 
     function addArmRow(row) {
@@ -767,6 +808,31 @@
       item.className = "armRow";
       const armLength = Math.max(Number($("armLength")?.value) || 2400, 1);
       const pointX = Number.isFinite(row.pointX) ? row.pointX : armLength;
+      const isBase = Math.abs(Number(row.height) || 0) < 1e-8;
+      if (isBase) item.classList.add("baseRow");
+
+      const top = document.createElement("div");
+      top.className = "armRowTop";
+      const titleWrap = document.createElement("div");
+      const title = document.createElement("div");
+      title.className = "armRowTitle";
+      title.textContent = isBase ? "Base beam" : "Cantilever arm";
+      const meta = document.createElement("div");
+      meta.className = "armRowMeta";
+      meta.textContent = isBase ? "Section from Base beam block" : "Own arm section";
+      titleWrap.append(title, meta);
+      top.appendChild(titleWrap);
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "X";
+      remove.title = "Remove arm";
+      remove.dataset.action = "removeArm";
+      top.appendChild(remove);
+      item.appendChild(top);
+
+      const fields = document.createElement("div");
+      fields.className = "armFields";
       [
         ["Height", "height", row.height],
         ["Point load", "point", row.point],
@@ -781,15 +847,31 @@
         input.value = round(value, 6);
         input.dataset.field = field;
         label.appendChild(input);
-        item.appendChild(label);
+        fields.appendChild(label);
       });
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.textContent = "X";
-      remove.title = "Remove arm";
-      remove.dataset.action = "removeArm";
-      item.appendChild(remove);
+      item.appendChild(fields);
+
+      const sectionControls = document.createElement("div");
+      sectionControls.className = "armSectionControls";
+      const familyLabel = document.createElement("label");
+      familyLabel.textContent = "Arm family";
+      const familySelect = document.createElement("select");
+      familySelect.dataset.field = "family";
+      familyLabel.appendChild(familySelect);
+      const sectionLabel = document.createElement("label");
+      sectionLabel.textContent = "Arm section";
+      const sectionSelect = document.createElement("select");
+      sectionSelect.dataset.field = "sectionId";
+      sectionLabel.appendChild(sectionSelect);
+      const axisLabel = document.createElement("label");
+      axisLabel.textContent = "Arm axis";
+      const axisSelect = document.createElement("select");
+      axisSelect.dataset.field = "axisKey";
+      axisLabel.appendChild(axisSelect);
+      sectionControls.append(familyLabel, sectionLabel, axisLabel);
+      item.appendChild(sectionControls);
       $("armRows").appendChild(item);
+      populateArmRowSectionControls(item, row.sectionId || DEFAULT_ARM_SECTION_ID, row.axisKey || "major");
     }
 
     function addDefaultArmRow() {
@@ -804,7 +886,7 @@
       let next = Math.min(columnHeight, Math.max(...schedule.map((row) => row.height), 0) + 750);
       while (used.has(round(next, 6)) && next < columnHeight) next = Math.min(columnHeight, next + 250);
       if (used.has(round(next, 6))) next = Math.max(0, columnHeight - 250);
-      addArmRow({ height: next, point: 0, pointX: Math.max(Number($("armLength").value) || 2400, 1), udl: 0 });
+      addArmRow({ height: next, point: 0, pointX: Math.max(Number($("armLength").value) || 2400, 1), udl: 0, sectionId: DEFAULT_ARM_SECTION_ID, axisKey: "major" });
       syncArmRowsToInputs();
     }
 
@@ -885,15 +967,72 @@
       selectOptionValue(select, existing);
     }
 
+    function populateArmRowSectionControls(rowEl, preferredSectionId = DEFAULT_ARM_SECTION_ID, preferredAxis = "major") {
+      const catalog = sectionCatalog();
+      const familySelect = rowEl.querySelector('[data-field="family"]');
+      const sectionSelect = rowEl.querySelector('[data-field="sectionId"]');
+      const axisSelect = rowEl.querySelector('[data-field="axisKey"]');
+      if (!familySelect || !sectionSelect || !axisSelect) return;
+      familySelect.replaceChildren();
+      sectionSelect.replaceChildren();
+      axisSelect.replaceChildren();
+      if (!catalog) return;
+      const preferredSection = catalog.byId[preferredSectionId] || catalog.byId[DEFAULT_ARM_SECTION_ID] || catalog.sections[0];
+      Object.keys(catalog.families).forEach((family) => {
+        const option = document.createElement("option");
+        option.value = family;
+        option.textContent = family + " (" + catalog.families[family] + ")";
+        familySelect.appendChild(option);
+      });
+      selectOptionValue(familySelect, preferredSection?.family || "PFC");
+      populateArmRowSectionSelect(rowEl, preferredSection?.id || preferredSectionId, preferredAxis);
+    }
+
+    function populateArmRowSectionSelect(rowEl, preferredSectionId, preferredAxis = "major") {
+      const catalog = sectionCatalog();
+      const familySelect = rowEl.querySelector('[data-field="family"]');
+      const sectionSelect = rowEl.querySelector('[data-field="sectionId"]');
+      if (!catalog || !familySelect || !sectionSelect) return;
+      const family = familySelect.value || "PFC";
+      sectionSelect.replaceChildren();
+      (catalog.byFamily[family] || []).forEach((section) => {
+        const option = document.createElement("option");
+        option.value = section.id;
+        option.textContent = section.label;
+        sectionSelect.appendChild(option);
+      });
+      selectOptionValue(sectionSelect, preferredSectionId);
+      populateArmRowAxisSelect(rowEl, preferredAxis);
+    }
+
+    function populateArmRowAxisSelect(rowEl, preferredAxis = "major") {
+      const catalog = sectionCatalog();
+      const sectionSelect = rowEl.querySelector('[data-field="sectionId"]');
+      const axisSelect = rowEl.querySelector('[data-field="axisKey"]');
+      if (!axisSelect) return;
+      axisSelect.replaceChildren();
+      const section = catalog && sectionSelect ? catalog.byId[sectionSelect.value] : null;
+      (section?.axes || [
+        { key: "major", label: "Major", I_mm4: Number($("I").value) || 0 },
+        { key: "minor", label: "Minor", I_mm4: Number($("I").value) || 0 }
+      ]).forEach((axis) => {
+        const option = document.createElement("option");
+        option.value = axis.key;
+        option.textContent = axis.label + " - I " + fmt(axis.I_mm4, 0) + " mm4";
+        axisSelect.appendChild(option);
+      });
+      selectOptionValue(axisSelect, preferredAxis);
+    }
+
     function selectedSection(role) {
       const catalog = sectionCatalog();
       return catalog ? catalog.byId[$(role + "Section").value] : null;
     }
 
-    function selectedMemberProperties(role) {
-      const section = selectedSection(role);
+    function sectionProperties(sectionId, axisKey, fallbackLabel) {
+      const catalog = sectionCatalog();
+      const section = catalog ? catalog.byId[sectionId] : null;
       if (!section) return null;
-      const axisKey = $(role + "Axis").value || "major";
       const axis = (section.axes || []).find((item) => item.key === axisKey) || section.axes?.[0];
       if (!axis || !section.area_mm2 || !axis.I_mm4) return null;
       const depth = Number(section.depth_mm) || Math.sqrt(section.area_mm2);
@@ -911,6 +1050,10 @@
       };
     }
 
+    function selectedMemberProperties(role) {
+      return sectionProperties($(role + "Section").value, $(role + "Axis").value || "major", "manual " + role + " properties");
+    }
+
     function updateSectionInputs() {
       const catalog = sectionCatalog();
       const note = $("catalogNote");
@@ -918,16 +1061,30 @@
         note.textContent = "Section catalog file was not found. Manual A and Izz inputs are active.";
         return;
       }
-      const arm = selectedMemberProperties("arm");
       const column = selectedMemberProperties("column");
       const base = selectedMemberProperties("base");
-      if (arm) {
-        $("A").value = round(arm.A, 3);
-        $("I").value = round(arm.I, 3);
+      const firstArmRow = document.querySelector("#armRows .armRow");
+      const firstArm = firstArmRow
+        ? sectionProperties(firstArmRow.querySelector('[data-field="sectionId"]')?.value, firstArmRow.querySelector('[data-field="axisKey"]')?.value || "major")
+        : sectionProperties(DEFAULT_ARM_SECTION_ID, "major");
+      if (firstArm) {
+        $("A").value = round(firstArm.A, 3);
+        $("I").value = round(firstArm.I, 3);
       }
       $("sectionMeta").innerHTML = "";
+      const armMeta = document.createElement("div");
+      const armRows = [...document.querySelectorAll("#armRows .armRow")];
+      const armLabels = armRows
+        .map((row) => {
+          const height = Number(row.querySelector('[data-field="height"]')?.value);
+          if (!Number.isFinite(height) || Math.abs(height) < 1e-8) return null;
+          const props = sectionProperties(row.querySelector('[data-field="sectionId"]')?.value, row.querySelector('[data-field="axisKey"]')?.value || "major");
+          return props ? "Y=" + fmt(height, 0) + ": " + props.label : null;
+        })
+        .filter(Boolean);
+      armMeta.textContent = armLabels.length ? "Cantilever arms: " + armLabels.join(" | ") : "Cantilever arms: set in each rack builder row";
+      $("sectionMeta").appendChild(armMeta);
       [
-        ["Arm", arm],
         ["Column", column],
         ["Base beam", base]
       ].forEach(([title, props]) => {
@@ -941,12 +1098,10 @@
     }
 
     function initSectionCatalog() {
-      populateFamilies("armFamily", "PFC");
       populateFamilies("columnFamily", "SHS");
       populateFamilies("baseFamily", "PFC");
-      populateSectionSelect("arm", "PFC|180x75x20");
-      populateSectionSelect("column", "SHS|150 x 150 x 6.3");
-      populateSectionSelect("base", "PFC|180x75x20");
+      populateSectionSelect("column", DEFAULT_COLUMN_SECTION_ID);
+      populateSectionSelect("base", DEFAULT_BASE_SECTION_ID);
       updateSectionInputs();
     }
 
@@ -1142,7 +1297,6 @@
       const I = numberValue("I");
       const colAMult = numberValue("colAMult");
       const colIMult = numberValue("colIMult");
-      const armProps = selectedMemberProperties("arm");
       const columnProps = selectedMemberProperties("column");
       const baseProps = selectedMemberProperties("base");
       if (columnHeight <= 0 || armLength <= 0 || E <= 0 || A <= 0 || I <= 0) {
@@ -1164,30 +1318,30 @@
       schedule.forEach((row) => {
         udlByHeight.set(row.height, row.udl);
       });
-      const armRole = armProps || fallbackMemberProperties(A, I, "manual arm properties");
+      const preparedSchedule = schedule.map((row) => {
+        const role = sectionProperties(row.sectionId, row.axisKey || "major") || fallbackMemberProperties(A, I, "manual arm properties");
+        return { ...row, member: role };
+      });
       const columnRole = columnProps || fallbackMemberProperties(A, I, "manual column properties");
       const baseRole = baseProps || fallbackMemberProperties(A, I, "manual base beam properties");
       return {
         columnHeight,
         armLength,
         armHeights: heights,
-        armSchedule: schedule.map((row) => ({ ...row })),
+        armSchedule: preparedSchedule,
         E,
         A,
         I,
-        armA: armRole.A,
-        armI: armRole.I,
-        armDepth: armRole.renderDepth,
         baseA: baseRole.A,
         baseI: baseRole.I,
         baseDepth: baseRole.renderDepth,
         colA: columnRole.A * colAMult,
         colI: columnRole.I * colIMult,
         colDepth: columnRole.renderDepth,
-        armSection: armRole.label,
+        armSection: "per-arm sections",
         columnSection: columnRole.label,
         baseSection: baseRole.label,
-        pointLoads: schedule
+        pointLoads: preparedSchedule
           .filter((row) => Math.abs(row.point) > 1e-9)
           .map((row) => ({ height: row.height, x: row.pointX, P: row.point })),
         udlByHeight,
@@ -1232,10 +1386,15 @@
       });
 
       const elements = [];
-      function memberPropsForType(type) {
+      function armPropsAt(y) {
+        const row = input.armSchedule.find((item) => Math.abs(item.height - y) < 1e-8);
+        return row?.member || fallbackMemberProperties(input.A, input.I, "manual arm properties");
+      }
+      function memberPropsForType(type, y) {
         if (type === "column") return { A: input.colA, I: input.colI, renderDepth: input.colDepth };
         if (type === "bottom") return { A: input.baseA, I: input.baseI, renderDepth: input.baseDepth };
-        return { A: input.armA, I: input.armI, renderDepth: input.armDepth };
+        const arm = armPropsAt(y);
+        return { A: arm.A, I: arm.I, renderDepth: arm.renderDepth, sectionLabel: arm.label };
       }
       for (let i = 0; i < levels.length - 1; i++) {
         const y1 = levels[i];
@@ -1252,6 +1411,7 @@
           A: props.A,
           I: props.I,
           renderDepth: props.renderDepth,
+          sectionLabel: input.columnSection,
           releases: { rzI: false, rzJ: false },
           qLocalY: 0
         });
@@ -1269,7 +1429,7 @@
           const x2 = xLocations[i + 1];
           if (Math.abs(x2 - x1) < 1e-8) continue;
           const type = y === 0 ? "bottom" : "arm";
-          const props = memberPropsForType(type);
+          const props = memberPropsForType(type, y);
           const releases = { rzI: false, rzJ: false };
           if (y === 0) {
             releases.rzI = i === 0 && (input.bottomRelease === "both" || input.bottomRelease === "left");
@@ -1285,6 +1445,7 @@
             A: props.A,
             I: props.I,
             renderDepth: props.renderDepth,
+            sectionLabel: type === "bottom" ? input.baseSection : props.sectionLabel,
             releases,
             qLocalY: -(input.udlByHeight.get(y) || 0)
           });
@@ -1624,6 +1785,7 @@
 
       const forceRows = result.elements.map((el) => ({
         member: el.id + " " + el.name,
+        section: el.sectionLabel || "",
         Ni: el.endForces[0],
         Vi: el.endForces[1],
         Mi: el.endForces[2],
@@ -1631,7 +1793,7 @@
         Vj: el.endForces[4],
         Mj: el.endForces[5]
       }));
-      table($("forceTable"), ["member", "Ni", "Vi", "Mi", "Nj", "Vj", "Mj"], forceRows);
+      table($("forceTable"), ["member", "section", "Ni", "Vi", "Mi", "Nj", "Vj", "Mj"], forceRows);
     }
 
     function table(container, columns, rows) {
@@ -1792,7 +1954,8 @@
       result.elements.forEach((el) => {
         const releaseNote = (el.releases.rzI || el.releases.rzJ) ? " # RELEASED IN RackFrame2D" : "";
         const J = Math.max(el.I * 2, 1e-9);
-        lines.push(`${el.id} ${el.i} ${el.j} ${el.A} ${el.A} ${el.A} ${J} ${el.I} ${el.I} ${E} ${G} 0 0${releaseNote}`);
+        const sectionNote = el.sectionLabel ? " # " + el.sectionLabel : "";
+        lines.push(`${el.id} ${el.i} ${el.j} ${el.A} ${el.A} ${el.A} ${J} ${el.I} ${el.I} ${E} ${G} 0 0${releaseNote}${sectionNote}`);
       });
       lines.push("");
       lines.push("0 # 1: include shear deformation");
@@ -1868,16 +2031,15 @@
       $("tipLoads").value = "0, 8000, 8000";
       $("pointPositions").value = "2400, 2400, 2400";
       $("udlLoads").value = "0, 0, 0";
+      $("armSections").value = [DEFAULT_ARM_SECTION_ID, DEFAULT_ARM_SECTION_ID, DEFAULT_ARM_SECTION_ID].join(", ");
+      $("armAxes").value = "major, major, major";
       renderArmRows(armScheduleFromBackingInputs());
       if (sectionCatalog()) {
-        $("armFamily").value = "PFC";
-        populateSectionSelect("arm", "PFC|180x75x20");
-        $("armAxis").value = "major";
         $("columnFamily").value = "SHS";
-        populateSectionSelect("column", "SHS|150 x 150 x 6.3");
+        populateSectionSelect("column", DEFAULT_COLUMN_SECTION_ID);
         $("columnAxis").value = "major";
         $("baseFamily").value = "PFC";
-        populateSectionSelect("base", "PFC|180x75x20");
+        populateSectionSelect("base", DEFAULT_BASE_SECTION_ID);
         $("baseAxis").value = "major";
         updateSectionInputs();
       }
@@ -1961,8 +2123,8 @@
 
     initSectionCatalog();
     renderArmRows(armScheduleFromBackingInputs());
-    const sectionControlIds = new Set(["armFamily", "armSection", "armAxis", "columnFamily", "columnSection", "columnAxis", "baseFamily", "baseSection", "baseAxis"]);
-    const passiveControlIds = new Set([...sectionControlIds, "columnQueryY", "armHeights", "tipLoads", "pointPositions", "udlLoads"]);
+    const sectionControlIds = new Set(["columnFamily", "columnSection", "columnAxis", "baseFamily", "baseSection", "baseAxis"]);
+    const passiveControlIds = new Set([...sectionControlIds, "columnQueryY", "armHeights", "tipLoads", "pointPositions", "udlLoads", "armSections", "armAxes"]);
     let armInputTimer = null;
 
     $("runBtn").addEventListener("click", run);
@@ -1971,8 +2133,16 @@
       addDefaultArmRow();
       run();
     });
-    $("armRows").addEventListener("change", () => {
-      syncArmRowsToInputs();
+    $("armRows").addEventListener("change", (event) => {
+      const row = event.target.closest(".armRow");
+      if (row && event.target.dataset.field === "family") {
+        populateArmRowSectionSelect(row);
+      }
+      if (row && event.target.dataset.field === "sectionId") {
+        populateArmRowAxisSelect(row);
+      }
+      const schedule = syncArmRowsToInputs();
+      renderArmRows(schedule);
       run();
     });
     $("armRows").addEventListener("input", () => {
@@ -1992,7 +2162,7 @@
     $("columnQueryY").addEventListener("input", () => {
       if (lastResult) renderColumnQuery(lastResult);
     });
-    ["armFamily", "columnFamily", "baseFamily"].forEach((id) => {
+    ["columnFamily", "baseFamily"].forEach((id) => {
       $(id).addEventListener("change", () => {
         const role = id.replace("Family", "");
         populateSectionSelect(role);
@@ -2000,7 +2170,7 @@
         run();
       });
     });
-    ["armSection", "columnSection", "baseSection"].forEach((id) => {
+    ["columnSection", "baseSection"].forEach((id) => {
       $(id).addEventListener("change", () => {
         const role = id.replace("Section", "");
         populateAxisSelect(role);
@@ -2008,7 +2178,7 @@
         run();
       });
     });
-    ["armAxis", "columnAxis", "baseAxis"].forEach((id) => {
+    ["columnAxis", "baseAxis"].forEach((id) => {
       $(id).addEventListener("change", () => {
         updateSectionInputs();
         run();
