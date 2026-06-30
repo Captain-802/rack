@@ -372,6 +372,33 @@
       margin: 0 0 8px;
     }
 
+    .diagramGrid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .diagramCard {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .diagramCard h2 {
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    .diagramWrap {
+      height: 380px;
+      border: 0;
+      border-radius: 0;
+    }
+
     .queryPanel {
       display: grid;
       grid-template-columns: minmax(170px, 260px) 1fr;
@@ -395,14 +422,6 @@
       overflow-wrap: anywhere;
     }
 
-    .diagramTop {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 10px;
-      align-items: end;
-      margin-bottom: 10px;
-    }
-
     a { color: var(--blue); }
 
     @media (max-width: 1040px) {
@@ -414,9 +433,10 @@
 
     @media (max-width: 620px) {
       header { height: auto; min-height: 58px; align-items: flex-start; flex-direction: column; padding: 10px 12px; }
-      .grid2, .grid3, .diagramTop, .sectionMeta, .armRow, .queryPanel { grid-template-columns: 1fr; }
+      .grid2, .grid3, .sectionMeta, .armRow, .queryPanel { grid-template-columns: 1fr; }
       .summary { grid-template-columns: 1fr; }
       aside, .workspace { padding: 10px; }
+      .diagramWrap { height: 310px; }
     }
   </style>
 </head>
@@ -587,16 +607,20 @@
         </div>
 
         <div id="diagramTab" class="tabPanel">
-          <div class="diagramTop">
-            <label>Member
-              <select id="memberSelect"></select>
-            </label>
-            <div class="miniLabel">
-              <span id="diagramInfo"></span>
-              <span>Local sign convention from element end forces</span>
+          <div class="miniLabel">
+            <span>Complete rack diagrams</span>
+            <span id="diagramInfo"></span>
+          </div>
+          <div class="diagramGrid">
+            <div class="diagramCard">
+              <h2>Complete rack shear force</h2>
+              <div class="svgWrap diagramWrap"><svg id="shearRackSvg" viewBox="0 0 1000 620" role="img" aria-label="Complete rack shear force diagram"></svg></div>
+            </div>
+            <div class="diagramCard">
+              <h2>Complete rack bending moment</h2>
+              <div class="svgWrap diagramWrap"><svg id="momentRackSvg" viewBox="0 0 1000 620" role="img" aria-label="Complete rack bending moment diagram"></svg></div>
             </div>
           </div>
-          <div class="svgWrap"><svg id="diagramSvg" viewBox="0 0 1000 620" role="img" aria-label="Shear and bending moment diagram"></svg></div>
         </div>
 
         <div id="tablesTab" class="tabPanel">
@@ -1291,7 +1315,6 @@
       $("mStatus").textContent = result.notes.length ? "OK +" + result.notes.length : "OK";
       renderModelSvg(result);
       renderTables(result);
-      renderMemberSelect(result);
       renderDiagram(result);
       renderColumnQuery(result);
       $("frame3ddText").value = result.frame3dd;
@@ -1490,45 +1513,107 @@
       container.replaceChildren(tbl);
     }
 
-    function renderMemberSelect(result) {
-      const select = $("memberSelect");
-      const existing = select.value;
-      select.replaceChildren();
-      result.elements.forEach((el) => {
-        const option = document.createElement("option");
-        option.value = String(el.id);
-        option.textContent = el.id + " - " + el.name;
-        select.appendChild(option);
-      });
-      if ([...select.options].some((o) => o.value === existing)) select.value = existing;
-    }
-
     function renderDiagram(result) {
-      const svg = $("diagramSvg");
-      svg.replaceChildren();
-      const id = Number($("memberSelect").value || result.elements[0].id);
-      const el = result.elements.find((m) => m.id === id) || result.elements[0];
-      $("diagramInfo").textContent = el.name + ", L=" + fmt(el.L, 1) + " mm";
-      const samples = [];
-      for (let i = 0; i <= 80; i++) {
-        const x = el.L * i / 80;
-        samples.push({ x, ...diagramValue(el, x) });
-      }
-      drawDiagramPanel(svg, samples, "V", 40, 42, 920, 230, "#047a72", "Shear V (N)");
-      drawDiagramPanel(svg, samples, "M", 40, 340, 920, 230, "#b4233c", "Bending M (N.mm)");
+      drawRackForceDiagram($("shearRackSvg"), result, "V", "#047a72", "Shear V", "N");
+      drawRackForceDiagram($("momentRackSvg"), result, "M", "#b4233c", "Moment M", "N.mm");
+      $("diagramInfo").textContent = "Max |V| = " + fmt(result.summary.maxV) + " N, max |M| = " + fmt(result.summary.maxM) + " N.mm";
     }
 
-    function drawDiagramPanel(svg, samples, key, x0, y0, w, h, color, title) {
-      const maxAbs = Math.max(...samples.map((s) => Math.abs(s[key])), 1);
-      const maxX = Math.max(...samples.map((s) => s.x), 1);
-      const sx = (x) => x0 + x / maxX * w;
-      const sy = (v) => y0 + h / 2 - v / maxAbs * h * 0.43;
-      rect(svg, x0, y0, w, h, "#ffffff", "#d5dde7");
-      line(svg, x0, y0 + h / 2, x0 + w, y0 + h / 2, "#9aa8b8", 1, 1);
-      const points = samples.map((s) => sx(s.x) + "," + sy(s[key])).join(" ");
-      polyline(svg, points, color, 3);
-      text(svg, x0 + 8, y0 + 20, title, "#253445", 14, "start");
-      text(svg, x0 + w - 8, y0 + 20, "max abs " + fmt(maxAbs), color, 13, "end");
+    function drawRackForceDiagram(svg, result, key, color, label, units) {
+      svg.replaceChildren();
+      const view = rackDiagramView(result);
+      rect(svg, 0, 0, view.W, view.H, "#ffffff");
+      drawGrid(svg, view.sx, view.sy, view.minX, view.maxX, view.minY, view.maxY);
+
+      const maxAbs = Math.max(...result.elements.flatMap((el) => diagramSamples(el, key).map((s) => Math.abs(s.value))), 1);
+      const offsetPx = 74;
+      text(svg, 38, 32, label + " diagram", color, 16, "start");
+      text(svg, view.W - 38, 32, "max abs " + fmt(maxAbs) + " " + units, color, 13, "end");
+
+      result.elements.forEach((el) => {
+        const ni = result.nodes[el.i - 1];
+        const nj = result.nodes[el.j - 1];
+        line(svg, view.sx(ni.x), view.sy(ni.y), view.sx(nj.x), view.sy(nj.y), "#263241", 2, 0.42);
+      });
+
+      result.elements.forEach((el) => {
+        const ni = result.nodes[el.i - 1];
+        const nj = result.nodes[el.j - 1];
+        const samples = diagramSamples(el, key);
+        const plotPoints = [];
+        const basePoints = [];
+        samples.forEach((sample) => {
+          const r = el.L > 0 ? sample.x / el.L : 0;
+          const gx = ni.x + (nj.x - ni.x) * r;
+          const gy = ni.y + (nj.y - ni.y) * r;
+          const bx = view.sx(gx);
+          const by = view.sy(gy);
+          const normal = screenLocalNormal(view, gx, gy, el);
+          const amp = sample.value / maxAbs * offsetPx;
+          plotPoints.push([bx + normal.x * amp, by + normal.y * amp]);
+          basePoints.push([bx, by]);
+        });
+        const closed = plotPoints.concat([...basePoints].reverse());
+        path(svg, pointPath(closed) + " Z", color, "none", 0, 0.13);
+        polyline(svg, plotPoints.map((p) => p[0] + "," + p[1]).join(" "), color, 3);
+      });
+
+      result.nodes.forEach((node) => circle(svg, view.sx(node.x), view.sy(node.y), 3, "#ffffff", "#263241"));
+      drawSupports(svg, result, view.sx, view.sy);
+      drawReleaseMarkers(svg, result, view.sx, view.sy);
+    }
+
+    function diagramSamples(el, key) {
+      const samples = [];
+      for (let i = 0; i <= 48; i++) {
+        const x = el.L * i / 48;
+        samples.push({ x, value: diagramValue(el, x)[key] });
+      }
+      return samples;
+    }
+
+    function rackDiagramView(result) {
+      const xs = result.nodes.map((n) => n.x);
+      const ys = result.nodes.map((n) => n.y);
+      let minX = Math.min(...xs);
+      let maxX = Math.max(...xs);
+      let minY = Math.min(...ys);
+      let maxY = Math.max(...ys);
+      const spanX = Math.max(maxX - minX, result.input.armLength, 1);
+      const spanY = Math.max(maxY - minY, result.input.columnHeight, 1);
+      const padX = Math.max(spanX * 0.16, 120);
+      const padY = Math.max(spanY * 0.16, 120);
+      minX -= padX;
+      maxX += padX;
+      minY -= padY;
+      maxY += padY;
+      const W = 1000;
+      const H = 620;
+      const margin = 58;
+      return {
+        W,
+        H,
+        minX,
+        maxX,
+        minY,
+        maxY,
+        sx: (x) => margin + (x - minX) / (maxX - minX || 1) * (W - 2 * margin),
+        sy: (y) => H - margin - (y - minY) / (maxY - minY || 1) * (H - 2 * margin)
+      };
+    }
+
+    function screenLocalNormal(view, x, y, el) {
+      const bx = view.sx(x);
+      const by = view.sy(y);
+      const nx = view.sx(x - el.s) - bx;
+      const ny = view.sy(y + el.c) - by;
+      const len = Math.hypot(nx, ny) || 1;
+      return { x: nx / len, y: ny / len };
+    }
+
+    function pointPath(points) {
+      if (!points.length) return "";
+      return "M " + points.map((p) => p[0] + " " + p[1]).join(" L ");
     }
 
     function makeFrame3DD(result) {
@@ -1732,7 +1817,6 @@
 
     $("runBtn").addEventListener("click", run);
     $("resetBtn").addEventListener("click", resetDefaults);
-    $("memberSelect").addEventListener("change", () => lastResult && renderDiagram(lastResult));
     $("addArmBtn").addEventListener("click", () => {
       addDefaultArmRow();
       run();
