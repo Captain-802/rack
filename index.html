@@ -163,6 +163,51 @@
       border-top: 1px solid var(--line);
     }
 
+    .armHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 6px 0 8px;
+      font-size: 12px;
+      font-weight: 760;
+      color: #334155;
+    }
+
+    .armRows {
+      display: grid;
+      gap: 8px;
+    }
+
+    .armRow {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 34px;
+      gap: 6px;
+      align-items: end;
+      padding: 8px;
+      border: 1px solid #d8e0ea;
+      border-radius: 6px;
+      background: #fbfcfe;
+    }
+
+    .armRow label {
+      margin: 0;
+    }
+
+    .armRow input {
+      padding: 7px 8px;
+    }
+
+    .armRow button,
+    .iconButton {
+      min-width: 34px;
+      padding: 6px 8px;
+    }
+
+    .hiddenData {
+      display: none;
+    }
+
     button {
       border: 1px solid #9fb0c2;
       border-radius: 6px;
@@ -327,6 +372,29 @@
       margin: 0 0 8px;
     }
 
+    .queryPanel {
+      display: grid;
+      grid-template-columns: minmax(170px, 260px) 1fr;
+      gap: 10px;
+      align-items: end;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .queryResult {
+      border: 1px solid #d8e0ea;
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 9px 10px;
+      min-height: 38px;
+      color: var(--ink);
+      font-weight: 720;
+      overflow-wrap: anywhere;
+    }
+
     .diagramTop {
       display: grid;
       grid-template-columns: 280px 1fr;
@@ -346,7 +414,7 @@
 
     @media (max-width: 620px) {
       header { height: auto; min-height: 58px; align-items: flex-start; flex-direction: column; padding: 10px 12px; }
-      .grid2, .grid3, .diagramTop, .sectionMeta { grid-template-columns: 1fr; }
+      .grid2, .grid3, .diagramTop, .sectionMeta, .armRow, .queryPanel { grid-template-columns: 1fr; }
       .summary { grid-template-columns: 1fr; }
       aside, .workspace { padding: 10px; }
     }
@@ -374,15 +442,16 @@
               <input id="armLength" type="number" value="2400" step="10">
             </label>
           </div>
-          <label>Arm heights from base
+          <div class="armHeader">
+            <span>Cantilever arms</span>
+            <button id="addArmBtn" type="button" class="iconButton" title="Add arm">+</button>
+          </div>
+          <div id="armRows" class="armRows"></div>
+          <div class="hiddenData">
             <input id="armHeights" value="0, 1500, 3000">
-          </label>
-          <label>Tip point loads downward
             <input id="tipLoads" value="0, 8000, 8000">
-          </label>
-          <label>UDL on arms downward
             <input id="udlLoads" value="0, 0, 0">
-          </label>
+          </div>
         </div>
       </section>
 
@@ -505,10 +574,16 @@
 
         <div id="modelTab" class="tabPanel active">
           <div class="miniLabel">
-            <span>Black: undeformed. Blue: deformed. Red: load.</span>
+            <span>Black: undeformed. Blue: deformed. Red: load. Orange rings: released bottom-member rotations.</span>
             <span id="scaleLabel"></span>
           </div>
           <div class="svgWrap"><svg id="modelSvg" viewBox="0 0 1000 620" role="img" aria-label="Rack frame model"></svg></div>
+          <div class="queryPanel">
+            <label>Column deflection height
+              <input id="columnQueryY" type="number" value="1800" step="10">
+            </label>
+            <div id="columnQueryResult" class="queryResult">-</div>
+          </div>
         </div>
 
         <div id="diagramTab" class="tabPanel">
@@ -565,6 +640,97 @@
       const values = raw.map(Number);
       if (values.some((v) => !Number.isFinite(v))) throw new Error("Invalid comma separated value in " + id + ".");
       return values;
+    }
+
+    function armScheduleFromBackingInputs() {
+      const heights = parseList("armHeights");
+      const loads = parseList("tipLoads");
+      const udls = parseList("udlLoads");
+      return heights.map((height, i) => ({
+        height,
+        point: loads[i] || 0,
+        udl: udls[i] || 0
+      }));
+    }
+
+    function armScheduleFromRows() {
+      const rows = [...document.querySelectorAll("#armRows .armRow")];
+      if (rows.length === 0) return armScheduleFromBackingInputs();
+      const schedule = rows.map((row) => {
+        const height = Number(row.querySelector('[data-field="height"]').value);
+        const point = Number(row.querySelector('[data-field="point"]').value);
+        const udl = Number(row.querySelector('[data-field="udl"]').value);
+        if (![height, point, udl].every(Number.isFinite)) throw new Error("Arm schedule contains an invalid number.");
+        return { height, point, udl };
+      });
+      if (!schedule.some((row) => Math.abs(row.height) < 1e-8)) schedule.push({ height: 0, point: 0, udl: 0 });
+      schedule.sort((a, b) => a.height - b.height);
+      for (let i = 1; i < schedule.length; i++) {
+        if (Math.abs(schedule[i].height - schedule[i - 1].height) < 1e-8) throw new Error("Arm schedule contains duplicate heights.");
+      }
+      return schedule;
+    }
+
+    function writeArmBackingInputs(schedule) {
+      $("armHeights").value = schedule.map((row) => round(row.height, 6)).join(", ");
+      $("tipLoads").value = schedule.map((row) => round(row.point, 6)).join(", ");
+      $("udlLoads").value = schedule.map((row) => round(row.udl, 6)).join(", ");
+    }
+
+    function syncArmRowsToInputs() {
+      const schedule = armScheduleFromRows();
+      writeArmBackingInputs(schedule);
+      return schedule;
+    }
+
+    function renderArmRows(schedule) {
+      const container = $("armRows");
+      container.replaceChildren();
+      schedule.forEach((row) => addArmRow(row));
+      syncArmRowsToInputs();
+    }
+
+    function addArmRow(row) {
+      const item = document.createElement("div");
+      item.className = "armRow";
+      [
+        ["Height", "height", row.height],
+        ["Tip load", "point", row.point],
+        ["UDL", "udl", row.udl]
+      ].forEach(([labelText, field, value]) => {
+        const label = document.createElement("label");
+        label.textContent = labelText;
+        const input = document.createElement("input");
+        input.type = "number";
+        input.step = field === "height" ? "10" : "100";
+        input.value = round(value, 6);
+        input.dataset.field = field;
+        label.appendChild(input);
+        item.appendChild(label);
+      });
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "X";
+      remove.title = "Remove arm";
+      remove.dataset.action = "removeArm";
+      item.appendChild(remove);
+      $("armRows").appendChild(item);
+    }
+
+    function addDefaultArmRow() {
+      let schedule;
+      try {
+        schedule = syncArmRowsToInputs();
+      } catch {
+        schedule = armScheduleFromBackingInputs();
+      }
+      const columnHeight = Math.max(Number($("columnHeight").value) || 3600, 1);
+      const used = new Set(schedule.map((row) => round(row.height, 6)));
+      let next = Math.min(columnHeight, Math.max(...schedule.map((row) => row.height), 0) + 750);
+      while (used.has(round(next, 6)) && next < columnHeight) next = Math.min(columnHeight, next + 250);
+      if (used.has(round(next, 6))) next = Math.max(0, columnHeight - 250);
+      addArmRow({ height: next, point: 0, udl: 0 });
+      syncArmRowsToInputs();
     }
 
     function uniqueSorted(values) {
@@ -887,18 +1053,21 @@
       if (columnHeight <= 0 || armLength <= 0 || E <= 0 || A <= 0 || I <= 0) {
         throw new Error("Geometry and section properties must be positive.");
       }
-      const heightsRaw = parseList("armHeights");
-      if (heightsRaw.length === 0) throw new Error("At least one arm height is required.");
-      let heights = uniqueSorted([0, ...heightsRaw]);
-      heights = heights.filter((h) => h >= 0 && h <= columnHeight);
-      if (heights.length === 0) throw new Error("Arm heights must lie between 0 and the column height.");
-      const loads = parseList("tipLoads");
-      const udls = parseList("udlLoads");
+      const schedule = syncArmRowsToInputs();
+      if (schedule.length === 0) throw new Error("At least one arm height is required.");
+      if (schedule.some((row) => row.height < 0 || row.height > columnHeight)) {
+        throw new Error("Arm heights must lie between 0 and the column height.");
+      }
+      const heights = uniqueSorted([0, ...schedule.map((row) => row.height)]);
       const pointByHeight = new Map();
       const udlByHeight = new Map();
-      heights.forEach((h, i) => {
-        pointByHeight.set(h, loads[i] || 0);
-        udlByHeight.set(h, udls[i] || 0);
+      heights.forEach((h) => {
+        pointByHeight.set(h, 0);
+        udlByHeight.set(h, 0);
+      });
+      schedule.forEach((row) => {
+        pointByHeight.set(row.height, row.point);
+        udlByHeight.set(row.height, row.udl);
       });
       return {
         columnHeight,
@@ -1124,7 +1293,56 @@
       renderTables(result);
       renderMemberSelect(result);
       renderDiagram(result);
+      renderColumnQuery(result);
       $("frame3ddText").value = result.frame3dd;
+    }
+
+    function columnDeflectionAt(result, y) {
+      if (!Number.isFinite(y)) throw new Error("Invalid column query height.");
+      const height = Math.max(0, Math.min(result.input.columnHeight, y));
+      const column = result.elements.find((el) => {
+        if (el.type !== "column") return false;
+        const ni = result.nodes[el.i - 1];
+        const nj = result.nodes[el.j - 1];
+        const yMin = Math.min(ni.y, nj.y) - 1e-8;
+        const yMax = Math.max(ni.y, nj.y) + 1e-8;
+        return height >= yMin && height <= yMax;
+      });
+      if (!column) return null;
+      const ni = result.nodes[column.i - 1];
+      const xLocal = Math.max(0, Math.min(column.L, height - Math.min(ni.y, result.nodes[column.j - 1].y)));
+      const r = column.L > 0 ? xLocal / column.L : 0;
+      const d = column.dLocal;
+      const u = (1 - r) * d[0] + r * d[3];
+      const n1 = 1 - 3 * r * r + 2 * r * r * r;
+      const n2 = column.L * (r - 2 * r * r + r * r * r);
+      const n3 = 3 * r * r - 2 * r * r * r;
+      const n4 = column.L * (-r * r + r * r * r);
+      const v = n1 * d[1] + n2 * d[2] + n3 * d[4] + n4 * d[5];
+      const dv = ((-6 * r + 6 * r * r) / column.L) * d[1]
+        + (1 - 4 * r + 3 * r * r) * d[2]
+        + ((6 * r - 6 * r * r) / column.L) * d[4]
+        + (-2 * r + 3 * r * r) * d[5];
+      return {
+        height,
+        Ux: column.c * u - column.s * v,
+        Uy: column.s * u + column.c * v,
+        Rz: dv,
+        member: column.name
+      };
+    }
+
+    function renderColumnQuery(result) {
+      const target = $("columnQueryResult");
+      try {
+        const y = Number($("columnQueryY").value);
+        const q = columnDeflectionAt(result, y);
+        target.textContent = q
+          ? "Y=" + fmt(q.height, 1) + " mm, Ux=" + fmt(q.Ux) + " mm, Uy=" + fmt(q.Uy) + " mm, Rz=" + fmt(q.Rz, 7) + " rad (" + q.member + ")"
+          : "-";
+      } catch (err) {
+        target.textContent = err.message;
+      }
     }
 
     function renderModelSvg(result) {
@@ -1152,8 +1370,6 @@
         const ni = result.nodes[el.i - 1];
         const nj = result.nodes[el.j - 1];
         line(svg, sx(ni.x), sy(ni.y), sx(nj.x), sy(nj.y), "#111827", 4, 1);
-        if (el.releases.rzI) hinge(svg, sx(ni.x), sy(ni.y));
-        if (el.releases.rzJ) hinge(svg, sx(nj.x), sy(nj.y));
       });
 
       result.elements.forEach((el) => {
@@ -1172,6 +1388,7 @@
         if (p > 0) arrow(svg, sx(node.x), sy(node.y + result.input.columnHeight * 0.08), sx(node.x), sy(node.y), varColor("red"), fmt(p, 0));
       });
       drawSupports(svg, result, sx, sy);
+      drawReleaseMarkers(svg, result, sx, sy);
     }
 
     function drawGrid(svg, sx, sy, minX, maxX, minY, maxY) {
@@ -1189,6 +1406,16 @@
       supportSymbol(svg, sx(base.x), sy(base.y), result.input.leftSupport);
       const right = result.nodes[result.tipNodeAt.get(0) - 1];
       supportSymbol(svg, sx(right.x), sy(right.y), result.input.rightSupport);
+    }
+
+    function drawReleaseMarkers(svg, result, sx, sy) {
+      result.elements.forEach((el) => {
+        if (!el.releases.rzI && !el.releases.rzJ) return;
+        const ni = result.nodes[el.i - 1];
+        const nj = result.nodes[el.j - 1];
+        if (el.releases.rzI) hinge(svg, sx(ni.x), sy(ni.y), "hinge");
+        if (el.releases.rzJ) hinge(svg, sx(nj.x), sy(nj.y), "hinge");
+      });
     }
 
     function supportSymbol(svg, x, y, type) {
@@ -1410,6 +1637,7 @@
       $("armHeights").value = "0, 1500, 3000";
       $("tipLoads").value = "0, 8000, 8000";
       $("udlLoads").value = "0, 0, 0";
+      renderArmRows(armScheduleFromBackingInputs());
       if (sectionCatalog()) {
         $("armFamily").value = "PFC";
         populateSectionSelect("arm", "PFC|180x75x20");
@@ -1430,6 +1658,7 @@
       $("rightSupport").value = "pin";
       $("bottomRelease").value = "both";
       $("defScale").value = 0;
+      $("columnQueryY").value = 1800;
       run();
     }
 
@@ -1469,8 +1698,10 @@
       svg.appendChild(el);
     }
 
-    function hinge(svg, x, y) {
-      circle(svg, x, y, 8, "#ffffff", "#b76514");
+    function hinge(svg, x, y, label) {
+      circle(svg, x, y, 12, "#ffffff", "#b76514");
+      circle(svg, x, y, 5, "#ffffff", "#b76514");
+      if (label) text(svg, x + 14, y - 10, label, "#8a4b05", 12, "start");
     }
 
     function arrow(svg, x1, y1, x2, y2, color, label) {
@@ -1494,11 +1725,39 @@
     });
 
     initSectionCatalog();
+    renderArmRows(armScheduleFromBackingInputs());
     const sectionControlIds = new Set(["armFamily", "armSection", "armAxis", "columnFamily", "columnSection", "columnAxis"]);
+    const passiveControlIds = new Set([...sectionControlIds, "columnQueryY", "armHeights", "tipLoads", "udlLoads"]);
+    let armInputTimer = null;
 
     $("runBtn").addEventListener("click", run);
     $("resetBtn").addEventListener("click", resetDefaults);
     $("memberSelect").addEventListener("change", () => lastResult && renderDiagram(lastResult));
+    $("addArmBtn").addEventListener("click", () => {
+      addDefaultArmRow();
+      run();
+    });
+    $("armRows").addEventListener("change", () => {
+      syncArmRowsToInputs();
+      run();
+    });
+    $("armRows").addEventListener("input", () => {
+      clearTimeout(armInputTimer);
+      armInputTimer = setTimeout(() => {
+        syncArmRowsToInputs();
+        run();
+      }, 120);
+    });
+    $("armRows").addEventListener("click", (event) => {
+      if (event.target.dataset.action !== "removeArm") return;
+      event.target.closest(".armRow").remove();
+      syncArmRowsToInputs();
+      renderArmRows(armScheduleFromRows());
+      run();
+    });
+    $("columnQueryY").addEventListener("input", () => {
+      if (lastResult) renderColumnQuery(lastResult);
+    });
     ["armFamily", "columnFamily"].forEach((id) => {
       $(id).addEventListener("change", () => {
         const role = id.replace("Family", "");
@@ -1528,7 +1787,7 @@
       await navigator.clipboard.writeText(lastResult.frame3dd);
     });
     document.querySelectorAll("input, select").forEach((el) => {
-      if (sectionControlIds.has(el.id)) return;
+      if (passiveControlIds.has(el.id) || el.closest("#armRows")) return;
       el.addEventListener("change", run);
     });
 
